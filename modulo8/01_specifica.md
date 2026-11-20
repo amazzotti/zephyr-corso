@@ -26,7 +26,7 @@ pulsante e configura il nodo dalla shell.
 | R3 | L'elaborazione calcola la media mobile delle ultime 5 misure valide. | 3 |
 | R4 | Se la media è ≥ soglia (predefinita 30.00 °C) l'allarme si attiva e LED0 si accende. | 3 |
 | R5 | L'allarme rientra quando la media scende sotto soglia − isteresi (predefinita 1.00 °C); LED0 si spegne. | 3 |
-| R6 | Premendo SW0 con allarme attivo l'allarme passa a "confermato" e LED0 si spegne; il pulsante ha un debounce di 50 ms. | 4 |
+| R6 | Premendo SW0 con allarme attivo l'allarme passa a "confermato" e LED0 si spegne; il pulsante è campionato ogni 10 ms con un debounce di 50 ms. | 4 |
 | R7 | LED1 lampeggia (battito, 500 ms acceso / 500 ms spento) finché il sistema è vivo. | 4 |
 | R8 | Dalla shell: `stato`, `soglia get`, `soglia set <°C>`, `storico`. | 5 |
 | R9 | La soglia impostata viene salvata e ricaricata all'avvio. | 5 |

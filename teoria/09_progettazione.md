@@ -20,8 +20,9 @@ Per ogni cosa da fare chiediti: **quando** deve succedere e **quanto dura**?
 
 | Tipo di attività | Strumento Zephyr |
 |---|---|
-| reazione immediata e brevissima a un evento hardware | **ISR** / callback (es. pulsante): solo registrare l'evento |
-| lavoro breve dopo un evento o un ritardo | **work** / **delayable work** (es. debounce) |
+| reazione immediata e brevissima a un evento hardware | **ISR** / callback (es. UART, timer; il pulsante sulla scheda vera): solo registrare l'evento |
+| controllo periodico di un ingresso | **k_timer** che campiona (es. pulsante con debounce, come in questo corso) |
+| lavoro breve dopo un evento o un ritardo | **work** / **delayable work** |
 | attività periodica regolare, breve | **k_timer** + work, oppure thread con sleep |
 | attività che si blocca (attende I2C, attende una coda) | **thread** proprio |
 | comandi dall'utente | shell (gira nel suo thread) |

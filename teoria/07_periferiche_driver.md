@@ -119,6 +119,45 @@ Regole della callback (le stesse del Modulo 5 per il timer): niente `k_msleep`, 
 Le variabili condivise tra callback e thread vanno protette: `atomic_t`, oppure
 passate con semafori e code.
 
+> **Limite di Renode.** Con Renode 1.16 e Zephyr 4.5 gli interrupt GPIO **non scattano**
+> nel simulatore: la configurazione va a buon fine, ma alla pressione del pulsante la
+> callback non viene mai chiamata (né sul fronte né a livello). Per questo negli esercizi
+> i pulsanti si leggono **campionandoli con un timer** (qui sotto). L'API degli interrupt
+> qui sopra resta quella da usare sulla scheda vera: la provi nei bonus.
+
+### 4.1 Campionamento con un timer
+
+Un `k_timer` periodico (es. ogni 10 ms) legge il pin nella sua funzione (contesto di
+interrupt del timer: `gpio_pin_get_dt` è lecita, è solo una lettura di registro) e
+riconosce il **fronte** confrontando la lettura con quella precedente:
+
+```c
+static void campiona(struct k_timer *t)
+{
+	static int precedente;
+	int ora = gpio_pin_get_dt(&btn);     /* 1 = premuto */
+
+	if (ora && !precedente) {            /* fronte 0 -> 1: pressione */
+		k_sem_give(&sem_pressione);  /* il resto lo fa un thread */
+	}
+	precedente = ora;
+}
+K_TIMER_DEFINE(timer_pulsante, campiona, NULL);
+/* in main():  k_timer_start(&timer_pulsante, K_MSEC(10), K_MSEC(10)); */
+```
+
+| | Interrupt GPIO | Campionamento con timer |
+|---|---|---|
+| Latenza | immediata (µs) | fino a un periodo (10 ms): per una persona è invisibile |
+| Consumo | la CPU dorme finché non premi | la CPU si sveglia 100 volte al secondo |
+| Eventi brevissimi | li vede tutti | perde gli impulsi più brevi del periodo |
+| Debounce | serve un meccanismo in più | è quasi gratis (sezione 5) |
+| Semplicità | callback, maschere, GPIOTE | un timer e un confronto |
+| Molti pulsanti | una callback per porta | un solo timer li legge tutti |
+
+Nei firmware veri si vedono entrambi: interrupt quando conta la latenza o il consumo
+(es. risveglio da sleep), campionamento per tastiere e pulsanti di interfaccia.
+
 ## 5. Rimbalzi e debounce
 
 Un pulsante meccanico, quando lo premi, non passa in modo pulito da 1 a 0: i contatti
@@ -130,15 +169,41 @@ pin  1 1 1 0 1 0 0 1 0 0 0 0 0 0 0      (una sola pressione!)
           rimbalzi ~1-10 ms
 ```
 
-Con gli interrupt sui fronti, una pressione può contare 3-4 volte. Il **debounce** è la
-tecnica per ignorare i rimbalzi. La più comune in un RTOS:
+Con gli interrupt sui fronti, o con un campionamento molto veloce, una pressione può
+contare 3-4 volte. Il **debounce** è la tecnica per ignorare i rimbalzi. Due modi comuni:
+
+**Per campionamento (quello usato negli esercizi).** Si campiona ogni 10 ms e si accetta
+un nuovo stato solo quando è rimasto **uguale per N campioni consecutivi** (N = 3 →
+30 ms di stabilità):
+
+```c
+static int stabile, candidato, uguali;   /* stato accettato, ultima lettura, conteggio */
+
+int letto = gpio_pin_get_dt(&btn);
+if (letto == candidato) {
+	uguali++;
+} else {
+	candidato = letto;
+	uguali = 1;
+}
+if (uguali >= 3 && candidato != stabile) {
+	stabile = candidato;   /* cambiamento valido: 1 = pressione, 0 = rilascio */
+}
+```
+
+Variante "integratore": un contatore che sale (fino a N) quando legge 1 e scende (fino a 0)
+quando legge 0; lo stato diventa 1 quando il contatore arriva a N e 0 quando arriva a 0.
+
+**Con interrupt + lavoro ritardato (sulla scheda vera).**
 
 1. a ogni fronte la callback (ri)programma un **lavoro ritardato** di ~30 ms
    (`k_work_reschedule`: se era già programmato, il conto alla rovescia riparte);
 2. quando il lavoro scatta, i rimbalzi sono finiti: legge il pin **stabile** e decide.
 
 In Renode i pulsanti non rimbalzano: i rimbalzi li simuli tu con più comandi
-`Press`/`Release` uno dopo l'altro.
+`Press`/`Release` uno dopo l'altro (macro della sezione 11). Attenzione: i comandi di una
+macro arrivano a distanza di pochissimo tempo virtuale, quindi un campionamento a 10 ms
+spesso non li vede nemmeno; per osservarli riduci il periodo del timer a 1 ms.
 
 ## 6. UART
 

@@ -156,7 +156,8 @@ dati:      d    d    d    d                    (stop)
 scadenza:  -->3s -->3s -->3s -->3s ........... ALLARME
 ```
 
-Altro uso: il **debounce** di un pulsante (Modulo 6).
+Altro uso: il **debounce** di un pulsante a interrupt sulla scheda vera (nel Modulo 6, in
+Renode, il pulsante si campiona invece con un `k_timer`: teoria 07, sezioni 4 e 5).
 
 ## 8. Una work queue propria
 

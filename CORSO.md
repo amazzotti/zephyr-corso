@@ -75,6 +75,12 @@ Dettagli del setup: Modulo 0 e [teoria/01_setup_toolchain.md](teoria/01_setup_to
   questo il driver ufficiale di Zephyr per il BME280 (sensor API) in Renode non si
   inizializza, e nel corso il driver del sensore lo scrivi tu (Modulo 6, esercizio 7).
   Dettagli: [teoria/07_periferiche_driver.md](teoria/07_periferiche_driver.md), sezione 7.
+- Gli **interrupt GPIO non scattano** (Renode 1.16 + Zephyr 4.5): la configurazione con
+  `gpio_pin_interrupt_configure_dt` riesce, ma la callback non viene mai chiamata, né sul
+  fronte né a livello. Leggere il pin (`gpio_pin_get_dt`) invece funziona: per questo nel
+  corso i pulsanti si **campionano con un `k_timer`** (ogni 10 ms, con debounce). Gli
+  interrupt della UART e dei timer funzionano normalmente. Dettagli:
+  [teoria/07_periferiche_driver.md](teoria/07_periferiche_driver.md), sezione 4.
 - Nei pulsanti simulati non c'è il rimbalzo meccanico: lo si simula a mano (Modulo 6).
 - Un LED che il firmware **non ha mai configurato** in Renode risulta acceso (`State` =
   `True`): il pin parte da 0 e i LED della DK si accendono con il pin a 0. Sulla scheda vera
@@ -112,7 +118,8 @@ Dettagli del setup: Modulo 0 e [teoria/01_setup_toolchain.md](teoria/01_setup_to
   lavoro ritardato (`k_work_delayable`), timeout, jitter.
 
 ### Modulo 6 — Periferiche e driver
-- GPIO in ingresso (polling e interrupt), debounce, UART in polling e a interrupt, I2C
+- GPIO in ingresso (polling, campionamento con timer; interrupt GPIO come concetto per la
+  scheda vera), debounce, UART in polling e a interrupt, I2C
   "grezzo" (lettura di registri), un driver del BME280 scritto da me (con la formula di
   compensazione del datasheet; la sensor API di Zephyr come concetto), watchdog.
 
@@ -346,10 +353,11 @@ la consegna e si scrive il codice sotto.
 ### Modulo 6 — Periferiche e driver
 
 - [ ] `modulo6/01_pulsante_polling` — **Pulsante in polling.** Leggere `sw0` e accendere `led0`.
-- [ ] `modulo6/02_pulsante_interrupt` — **Pulsante a interrupt.** `gpio_pin_interrupt_configure_dt`,
-  callback, contatore di pressioni.
-- [ ] `modulo6/03_debounce` — **Debounce.** Interrupt + lavoro ritardato per ignorare i rimbalzi
-  (simulati con pressioni rapide da Renode).
+- [ ] `modulo6/02_pulsante_campionato` — **Pulsante campionato con un timer.** `k_timer` ogni
+  10 ms, riconoscimento del fronte, contatore di pressioni; l'API degli interrupt GPIO
+  (`gpio_pin_interrupt_configure_dt`, callback) come si userebbe sulla scheda vera (bonus).
+- [ ] `modulo6/03_debounce` — **Debounce.** Debounce per campionamento (stato valido dopo 3
+  campioni uguali) per ignorare i rimbalzi (simulati con pressioni rapide da Renode).
 - [ ] `modulo6/04_uart_polling` — **UART in polling.** `uart_poll_in`/`uart_poll_out`: eco dei
   caratteri digitati.
 - [ ] `modulo6/05_uart_interrupt` — **UART a interrupt.** Ricezione a interrupt, buffer di riga,

@@ -13,9 +13,8 @@ attendi 30: ALLARME ATTIVO \(media \d+\.\d\d >= soglia 25\.00\)
 controlla: sysbus.gpio0.led0 State => True
 # R6: conferma con il pulsante
 monitor: sysbus.gpio0.sw0 Press
-pausa: 200
-monitor: sysbus.gpio0.sw0 Release
 attendi 5: ALLARME CONFERMATO
+monitor: sysbus.gpio0.sw0 Release
 controlla: sysbus.gpio0.led0 State => False
 scrivi: stato
 attendi: Allarme: CONFERMATO

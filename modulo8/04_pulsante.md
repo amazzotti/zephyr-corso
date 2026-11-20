@@ -1,17 +1,24 @@
 # Passo 4 (Modulo 8) — Tacitare l'allarme (e battito)
 
 Teoria: [teoria/09_progettazione.md](../teoria/09_progettazione.md), sezioni 2 e 4;
-ripasso: `modulo6/02_pulsante_interrupt`, `modulo6/03_debounce`, `modulo5/01_k_timer`.
+ripasso: `modulo6/02_pulsante_campionato`, `modulo6/03_debounce`, `modulo5/01_k_timer`.
 
 **Obiettivo:** l'operatore conferma l'allarme premendo SW0; LED1 lampeggia come "battito"
 per dire che il nodo è vivo. Requisiti coperti: **R6, R7**.
 
 ## Cosa fare
 
-1. **`src/pulsante.c` / `pulsante.h`**: SW0 (alias `pulsante_conferma`) a interrupt sul
-   fronte di pressione. Nell'ISR **non** confermare l'allarme: fai partire un
-   `k_work_delayable` a 50 ms (debounce). Nel lavoro rileggi il pin: se è ancora premuto,
-   la pressione è valida.
+1. **`src/pulsante.c` / `pulsante.h`**: SW0 (alias `pulsante_conferma`) **campionato**
+   con un `k_timer` ogni 10 ms e debounce per campionamento (esercizio 6.03): la
+   pressione è valida quando il pin resta premuto per 5 campioni consecutivi (50 ms).
+   Nella funzione del timer (contesto di interrupt) **non** confermare l'allarme:
+   segnala soltanto la pressione valida (punto 2). Se nel Modulo 6 hai scritto il
+   debounce come libreria (`debounce.c/.h`), riusala.
+
+   > Limite di Renode: gli interrupt GPIO non scattano nel simulatore, per questo il
+   > pulsante si campiona. Sulla scheda vera potresti usare l'interrupt sul fronte +
+   > un `k_work_delayable` di 50 ms (teoria 07, sezione 5): l'interfaccia di
+   > `pulsante.h` resterebbe identica, cambierebbe solo `pulsante.c`.
 2. La pressione valida deve arrivare all'**elaborazione**, che possiede lo stato
    dell'allarme. Scegli il meccanismo (e scrivilo nella specifica, sezione 4):
    - un `k_sem` / `k_event` che l'elaborazione controlla;
@@ -32,7 +39,10 @@ per dire che il nodo è vivo. Requisiti coperti: **R6, R7**.
 ## Suggerimenti
 
 - Dal monitor di Renode: `sysbus.gpio0.sw0 Press`, poi `sysbus.gpio0.sw0 Release`.
-  Per simulare un rimbalzo: `Press`, `Release`, `Press` in rapida successione.
+  Per simulare un rimbalzo: `Press`, `Release`, `Press` in rapida successione (macro
+  `rimbalzo` della teoria 07, sezione 11).
+- Il timer dei pulsanti e quello del battito possono essere lo stesso? Si', ma tenerli
+  separati rende `pulsante.c` e `uscite.c` indipendenti.
 - La pressione con allarme non attivo non deve fare nulla (e non deve stampare
   `ALLARME CONFERMATO`).
 - Il battito sarà più utile al passo 6: se il sistema si pianta, il LED smette di

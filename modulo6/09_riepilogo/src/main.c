@@ -5,7 +5,7 @@
  *         teoria/05_sincronizzazione.md (mutex), teoria/06_tempo_lavoro_differito.md.
  *
  * OBIETTIVO
- * Un piccolo termostato di allarme che mette insieme sensore, pulsanti con interrupt e
+ * Un piccolo termostato di allarme che mette insieme sensore, pulsanti campionati con
  * debounce, LED e thread:
  *   - un thread legge la temperatura ogni secondo;
  *   - se la temperatura supera la soglia (in modalita' automatica) scatta l'allarme:
@@ -40,19 +40,22 @@
  *      - se temperatura <= soglia e c'era allarme: allarme = false, led0 spento,
  *        stampa "Allarme rientrato".
  *    (Prima il LED, poi la stampa.)
- * 5. Pulsanti con interrupt + debounce (esercizio 3). Un'idea semplice: tutte e tre le
- *    callback fanno k_work_reschedule dello STESSO lavoro ritardato; il lavoro legge i
- *    tre pulsanti e confronta ciascuno con il suo stato stabile precedente (array).
+ * 5. Pulsanti campionati con debounce (esercizi 2 e 3): un solo k_timer ogni 10 ms
+ *    legge i tre pulsanti e applica a ciascuno il debounce per campionamento (array di
+ *    stati: stabile, candidato, uguali). Quando un pulsante diventa stabilmente premuto,
+ *    la funzione del timer (interrupt!) NON gestisce la pressione: mette l'indice del
+ *    pulsante in una k_msgq (o fa k_work_submit) e un thread/lavoro fa il resto.
  *    Alla pressione:
  *      - sw0: inverte manutenzione, imposta led1, chiama valuta_allarme() e stampa
  *        "Modalita: manutenzione" oppure "Modalita: automatica";
  *      - sw1 / sw2: nuova soglia = temperatura -/+ 100, stampa "Soglia: XX.XX C".
- * 6. main(): controlli dei device, configurazione dei pin e degli interrupt, poi
- *    stampa "Modalita: automatica" e la soglia iniziale ("Soglia: 30.00 C").
- *    I thread di acquisizione partono da soli; il main puo' terminare.
- * 7. Disegna (anche su carta) quali parti girano in interrupt, quali nella work queue
- *    e quali nel thread di acquisizione, e quali dati condividono. Scrivilo in fondo
- *    a questo commento.
+ * 6. main(): controlli dei device, configurazione dei pin, avvio del timer dei
+ *    pulsanti, poi stampa "Modalita: automatica" e la soglia iniziale
+ *    ("Soglia: 30.00 C"). I thread partono da soli; il main puo' terminare (o fare
+ *    lui da thread che gestisce le pressioni lette dalla coda).
+ * 7. Disegna (anche su carta) quali parti girano in interrupt (timer), quali nella
+ *    work queue o nel thread dei pulsanti e quali nel thread di acquisizione, e quali
+ *    dati condividono. Scrivilo in fondo a questo commento.
  *
  * OUTPUT ATTESO (con il sensore simulato a 22.50 C, il valore iniziale in Renode)
  *     Modalita: automatica
@@ -66,16 +69,17 @@
  *     Modalita: manutenzione                  (sw0)
  *
  * CONCETTI NUOVI
- * - Nessuno: e' il riepilogo. Il punto e' far convivere interrupt, work queue, un
- *   thread periodico e dati condivisi senza race condition.
+ * - Nessuno: e' il riepilogo. Il punto e' far convivere un timer (interrupt), una coda
+ *   o work queue, un thread periodico e dati condivisi senza race condition.
  *
  * COME VERIFICARE DA SOLO
  *     .\verifica.ps1 modulo6\09_riepilogo
  * La verifica usa sw1/sw2/sw0 e controlla messaggi e LED.
  *
  * ERRORI TIPICI
- * - k_mutex_lock nella callback del GPIO: in interrupt non si puo' (il lavoro ritardato
- *   gira invece in un thread, li' si puo').
+ * - k_mutex_lock nella funzione del timer: in interrupt non si puo' (il thread o il
+ *   lavoro della work queue che riceve la pressione gira invece in un thread, li' si
+ *   puo').
  * - Stampare "ALLARME" a ogni lettura invece che solo al cambiamento.
  * - Leggere temperatura_c100 nel lavoro dei pulsanti senza mutex mentre il thread la
  *   scrive.

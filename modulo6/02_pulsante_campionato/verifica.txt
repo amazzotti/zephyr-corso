@@ -1,4 +1,4 @@
-# Verifica dell'esercizio modulo6/02_pulsante_interrupt
+# Verifica dell'esercizio modulo6/02_pulsante_campionato
 attendi: Booting Zephyr OS
 attendi: Pronto: premi sw0
 monitor: sysbus.gpio0.sw0 Press
