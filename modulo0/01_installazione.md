@@ -54,12 +54,20 @@ dtc --version
 ```powershell
 python -m venv C:\zephyrproject\.venv
 C:\zephyrproject\.venv\Scripts\Activate.ps1
-pip install west
+python -m pip install west
 ```
 
 Il prompt ora inizia con `(.venv)`.
 
-**Controllo:** `west --version` stampa la versione di west.
+**Controllo:** `python -m west --version` stampa la versione di west.
+
+> **Smart App Control.** Su questo PC Windows ha attivo *Smart App Control*, che blocca gli
+> eseguibili non firmati: `west.exe` viene bloccato ("Un criterio di controllo
+> dell'applicazione ha bloccato il file"). Per questo si scrive **`python -m west`** al posto
+> di `west`: è lo stesso programma, avviato tramite `python.exe`, che è firmato.
+> Dopo `. .\attiva.ps1` puoi scrivere di nuovo semplicemente `west`: lo script definisce
+> una funzione che fa la sostituzione per te. Il compilatore dell'SDK e Renode invece
+> partono senza problemi.
 
 ## Passo 4 — Scaricare Zephyr
 
@@ -67,21 +75,22 @@ Scegli l'ultima versione **stabile** di Zephyr (un tag `vX.Y.Z`, non "rc") da
 https://github.com/zephyrproject-rtos/zephyr/releases e usala al posto di `vX.Y.Z`:
 
 ```powershell
-west init -m https://github.com/zephyrproject-rtos/zephyr --mr vX.Y.Z C:\zephyrproject
+python -m west init -m https://github.com/zephyrproject-rtos/zephyr --mr vX.Y.Z C:\zephyrproject
 cd C:\zephyrproject
-west update
+python -m west update --narrow -o=--depth=1
 ```
 
-`west update` scarica tutti i moduli: ci vuole tempo. Poi:
+`west update` scarica tutti i moduli: ci vuole tempo. `--narrow -o=--depth=1` scarica solo
+la versione corrente di ogni modulo, senza tutta la storia: molto più veloce e leggero.
+Poi i pacchetti Python che servono alla compilazione e la registrazione per CMake:
 
 ```powershell
-west zephyr-export
-west packages pip --install
+python -m pip install -r C:\zephyrproject\zephyr\scripts\requirements.txt
+python -m west zephyr-export
 ```
 
-(`west zephyr-export` fa sapere a CMake dove sta Zephyr; `west packages pip --install`
-installa i pacchetti Python che servono alla compilazione. Se il secondo comando non
-esiste nella tua versione: `pip install -r C:\zephyrproject\zephyr\scripts\requirements.txt`.)
+(Su Windows `west packages pip --install` non installa i pacchetti, perché west li sta
+usando: per questo si usa pip direttamente.)
 
 **Controllo:** esiste il file `C:\zephyrproject\zephyr\VERSION`. Aprilo e annota la versione
 qui sotto.
@@ -91,15 +100,21 @@ qui sotto.
 Installiamo solo la toolchain ARM, che è quella che serve per il nRF52840:
 
 ```powershell
+$env:Path += ';C:\Program Files\7-Zip'     # l'installazione dell'SDK vuole 7z nel PATH
 cd C:\zephyrproject\zephyr
-west sdk install -t arm-zephyr-eabi
+python -m west sdk install -t arm-zephyr-eabi
 ```
+
+L'SDK finisce in `C:\Users\<utente>\zephyr-sdk-<versione>` (qui: `zephyr-sdk-1.0.1`) e il
+compilatore è in `gnu\arm-zephyr-eabi\bin`. Se l'installazione si ferma con "requires '7z'",
+il PATH non comprende 7-Zip: aggiungilo come sopra e lancia
+`C:\Users\<utente>\zephyr-sdk-<versione>\setup.cmd /t arm-zephyr-eabi /c`.
 
 **Controllo:** compila un esempio ufficiale:
 
 ```powershell
 cd C:\zephyrproject
-west build -b nrf52840dk/nrf52840 -d build-prova zephyr\samples\hello_world --no-sysbuild
+python -m west build -b nrf52840dk/nrf52840 -d build-prova zephyr\samples\hello_world --no-sysbuild
 ```
 
 Deve finire con una tabella `Memory region / Used Size / Region Size` e il file
@@ -142,6 +157,13 @@ niente di tuo, ma deve comparire il banner `*** Booting Zephyr OS build ... ***`
 Chiudi Renode (scrivi `quit` nel monitor).
 
 ---
+
+## Stato su questo PC (20/11/2026)
+
+I passi 2-6 sono già stati eseguiti: Git, Python 3.12, CMake, Ninja, dtc, gperf, 7-Zip,
+Renode 1.16.0, Zephyr **v4.5.0** in `C:\zephyrproject`, Zephyr SDK **1.0.1** (solo toolchain
+ARM). Restano da fare a mano il **Passo 1** (permesso per gli script) e il **Passo 7**
+(VS Code), poi la prova finale del Passo 8. Le risposte qui sotto le puoi ricavare comunque.
 
 ## Le mie risposte (scrivile qui)
 

@@ -35,7 +35,12 @@ function Invoke-Compilazione([string]$App, [switch]$Pulito) {
     Write-Host "west $($wargs -join ' ')" -ForegroundColor DarkGray
     # "python -m west" invece di "west.exe": Smart App Control di Windows blocca west.exe
     # (non firmato), mentre python.exe e' firmato.
+    # west scrive messaggi normali anche su stderr: con ErrorActionPreference = Stop
+    # PowerShell 5.1 li tratterebbe come errori. Qui conta solo il codice di uscita.
+    $prima = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     & python -m west @wargs
+    $ErrorActionPreference = $prima
     if ($LASTEXITCODE -ne 0) {
         throw "Compilazione fallita: leggi il PRIMO errore nell'output qui sopra."
     }

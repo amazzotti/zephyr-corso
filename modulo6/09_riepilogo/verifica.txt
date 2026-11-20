@@ -2,21 +2,21 @@
 attendi: Booting Zephyr OS
 attendi: ^Modalita: automatica$
 attendi: ^Soglia: 30\.00 C$
-attendi: ^Temperatura: -?\d+\.\d{2} C$
+attendi: ^Temperatura: 22\.50 C$
 
 # sw1: soglia sotto la temperatura -> allarme
 monitor: sysbus.gpio0.sw1 Press
 pausa: 200
 monitor: sysbus.gpio0.sw1 Release
-attendi: ^Soglia: -?\d+\.\d{2} C$
-attendi 15: ^ALLARME: -?\d+\.\d{2} C oltre la soglia
+attendi: ^Soglia: 21\.50 C$
+attendi 15: ^ALLARME: 22\.50 C oltre la soglia
 controlla: sysbus.gpio0.led0 State => True
 
 # sw2: soglia sopra la temperatura -> rientro
 monitor: sysbus.gpio0.sw2 Press
 pausa: 200
 monitor: sysbus.gpio0.sw2 Release
-attendi: ^Soglia: -?\d+\.\d{2} C$
+attendi: ^Soglia: 23\.50 C$
 attendi 15: ^Allarme rientrato$
 controlla: sysbus.gpio0.led0 State => False
 

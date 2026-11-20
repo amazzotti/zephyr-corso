@@ -13,6 +13,12 @@ machine LoadPlatformDescription $repl
 # registri che il simulatore non modella) scrivi nel monitor:  logLevel 2   (o 0 per tutto)
 logLevel 3
 
+# Valori iniziali del sensore BME280 (il modello parte da 0). Si cambiano dal monitor con
+#   sysbus.twi0.bme280 Temperature 35.5     (gradi Celsius)
+#   sysbus.twi0.bme280 Humidity 60          (% di umidita' relativa)
+sysbus.twi0.bme280 Temperature 22.5
+sysbus.twi0.bme280 Humidity 45
+
 # "machine Reset" ricarica il firmware e riparte da capo.
 macro reset
 """

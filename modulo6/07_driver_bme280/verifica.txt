@@ -1,0 +1,8 @@
+# Verifica dell'esercizio modulo6/07_driver_bme280
+attendi: Booting Zephyr OS
+attendi: ^BME280 pronto$
+attendi: ^Temperatura: 22\.50 C$
+# la temperatura cambia dal monitor di Renode
+monitor: sysbus.twi0.bme280 Temperature 35.5
+attendi 10: ^Temperatura: 35\.50 C$
+mai: Errore

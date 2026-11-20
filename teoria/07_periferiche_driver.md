@@ -212,19 +212,50 @@ START | indirizzo + W | ACK | registro | ACK | RESTART | indirizzo + R | ACK | d
   del registro, poi leggi* uno o più byte (lettura "a raffica", *burst*: il sensore avanza da
   solo al registro successivo).
 
-API Zephyr (versioni `_dt` con la `i2c_dt_spec`):
+Nel diagramma, tra la scrittura del registro e la lettura non c'è uno STOP ma un
+**RESTART** (*repeated start*): il controller tiene il bus per sé e cambia direzione.
+È la forma standard per leggere un registro. Si può fare anche con **due transazioni
+separate**, la prima chiusa da uno STOP:
 
-```c
-uint8_t id;
-i2c_reg_read_byte_dt(&sens, 0xD0, &id);             /* legge un registro */
-i2c_reg_write_byte_dt(&sens, 0xF4, 0x25);           /* scrive un registro */
-uint8_t buf[6];
-i2c_burst_read_dt(&sens, 0x88, buf, sizeof(buf));   /* legge 6 registri consecutivi */
-uint8_t reg = 0xD0;
-i2c_write_read_dt(&sens, &reg, 1, &id, 1);          /* la forma generale */
+```
+START | indirizzo + W | ACK | registro | ACK | STOP
+START | indirizzo + R | ACK | dato | ... | NACK | STOP
 ```
 
-Nel devicetree un dispositivo I2C è un nodo **figlio** del bus, con l'indirizzo in `reg`:
+Il BME280 (e quasi tutti i sensori) accetta entrambe le forme: il "puntatore al registro"
+resta memorizzato nel sensore tra le due transazioni.
+
+API Zephyr di base (bus + indirizzo):
+
+```c
+const struct device *bus = DEVICE_DT_GET(DT_NODELABEL(i2c0));
+uint8_t reg = 0xD0, id;
+i2c_write(bus, &reg, 1, 0x76);         /* transazione 1: "parto dal registro 0xD0" */
+i2c_read(bus, &id, 1, 0x76);           /* transazione 2: leggo 1 byte */
+uint8_t cmd[2] = {0xF4, 0x27};
+i2c_write(bus, cmd, 2, 0x76);          /* scrive 0x27 nel registro 0xF4 */
+```
+
+Sulla scheda vera si usano di solito le funzioni con il repeated start, spesso nella
+versione `_dt` che prende bus e indirizzo da una `i2c_dt_spec` del devicetree:
+
+```c
+i2c_write_read(bus, 0x76, &reg, 1, &id, 1);         /* scrivi + leggi, con RESTART */
+i2c_reg_read_byte_dt(&sens, 0xD0, &id);             /* legge un registro */
+i2c_burst_read_dt(&sens, 0x88, buf, sizeof(buf));   /* legge registri consecutivi */
+```
+
+> **Limite di Renode: niente repeated start.** Il modello I2C del nRF52840 nel simulatore
+> gestisce bene le transazioni chiuse da STOP, ma **non** il repeated start:
+> `i2c_write_read`, `i2c_reg_read_byte`, `i2c_burst_read` (e le versioni `_dt`) restituiscono
+> 0 ("tutto bene") ma con **dati sbagliati**. Nel corso quindi si legge sempre con
+> `i2c_write` + `i2c_read`. Per lo stesso motivo il driver ufficiale di Zephyr per il
+> BME280 non si inizializza in Renode, e il driver lo scriviamo noi (Modulo 6,
+> esercizio 7). Sulla scheda vera tutte e due le forme funzionano.
+
+Nel devicetree un dispositivo I2C si descrive come nodo **figlio** del bus, con l'indirizzo
+in `reg` (così fanno i driver ufficiali; nel corso non serve, perché il nostro driver usa
+direttamente bus e indirizzo):
 
 ```dts
 &i2c0 {
@@ -253,20 +284,55 @@ Il BME280 (Bosch) misura temperatura, pressione e umidità. Registri principali:
 | `0xF4` | `ctrl_meas` | sovracampionamento di temperatura e pressione + modo |
 | `0xF7`-`0xFE` | dati | pressione (3 byte), temperatura (3 byte), umidità (2 byte) |
 
-- I coefficienti a 16 bit sono **little-endian**: prima il byte basso, poi quello alto.
-  `dig_T1 = buf[0] | (buf[1] << 8)` (senza segno), `dig_T2` e `dig_T3` sono con segno
-  (`int16_t`).
-- `ctrl_meas = 0x25` = `001 001 01`: temperatura ×1, pressione ×1, modo *forced* (una misura,
-  poi il sensore torna a riposo).
-- La temperatura grezza è un numero a 20 bit: `adc_T = (msb << 12) | (lsb << 4) | (xlsb >> 4)`
-  dai registri `0xFA`, `0xFB`, `0xFC`. Per ottenere gradi Celsius serve la **formula di
-  compensazione** del datasheet, che usa i coefficienti di calibrazione.
+Registri usati nel corso (solo temperatura):
 
-È tutto lavoro che il driver Zephyr fa per te: per questo esiste la sensor API.
+| Registri | Contenuto |
+|---|---|
+| `0xD0` | ID, deve valere `0x60` |
+| `0x88`, `0x89` | `dig_T1` (byte basso, byte alto), **senza segno** (`uint16_t`) |
+| `0x8A`, `0x8B` | `dig_T2`, **con segno** (`int16_t`) |
+| `0x8C`, `0x8D` | `dig_T3`, **con segno** (`int16_t`) |
+| `0xF4` | `ctrl_meas`: scrivere `0x27` avvia le misure continue |
+| `0xFA`, `0xFB`, `0xFC` | `temp_msb`, `temp_lsb`, `temp_xlsb`: temperatura grezza |
+
+- I coefficienti a 16 bit sono **little-endian**: prima il byte basso, poi quello alto.
+  `dig_T1 = buf[0] | (buf[1] << 8)`; per `dig_T2` e `dig_T3` lo stesso, ma salvati in un
+  `int16_t` (così `0x8000` vale −32768 e non 32768).
+- `ctrl_meas` = `osrs_t` (3 bit) | `osrs_p` (3 bit) | `mode` (2 bit).
+  `0x27` = `001 001 11`: temperatura ×1, pressione ×1, modo **normal** (misure continue).
+  `0x25` = `001 001 01`: modo *forced* (una misura, poi il sensore torna a riposo).
+- La temperatura grezza è un numero a **20 bit**:
+  `adc_T = (msb << 12) | (lsb << 4) | (xlsb >> 4)` (di `xlsb` contano solo i 4 bit alti).
+
+**Formula di compensazione** (datasheet BME280, sezione 4.2.3, versione intera a 32 bit):
+trasforma `adc_T` in centesimi di grado usando i coefficienti di calibrazione, che sono
+diversi per ogni esemplare di sensore (misurati in fabbrica).
+
+```c
+int32_t var1, var2, t_fine, T;
+var1 = ((((adc_T >> 3) - ((int32_t)dig_T1 << 1))) * ((int32_t)dig_T2)) >> 11;
+var2 = (((((adc_T >> 4) - ((int32_t)dig_T1)) *
+          ((adc_T >> 4) - ((int32_t)dig_T1))) >> 12) * ((int32_t)dig_T3)) >> 14;
+t_fine = var1 + var2;          /* serve anche alle formule di pressione e umidita' */
+T = (t_fine * 5 + 128) >> 8;   /* centesimi di grado: 2250 = 22.50 C */
+```
+
+- Tutto in interi: `>> 11` è una divisione per 2^11 molto più veloce. Nessun `float`.
+- I cast `(int32_t)` servono perché `dig_T1` è senza segno: senza, la sottrazione verrebbe
+  fatta senza segno e il risultato sarebbe sbagliato.
+- Esempio con i valori del sensore simulato da Renode: `dig_T1 = 32768`,
+  `dig_T2 = -32768`, `dig_T3 = 0`, registri `0xFA-0xFC` = `71 f0 d0` →
+  `adc_T = 466701`, `var1 = 115184`, `var2 = 0`, `T = 2250` → **22.50 °C**.
+
+Conoscere registri e formula è tutto ciò che serve per scrivere un driver: è quello che fai
+nell'esercizio 7.
 
 ## 9. La sensor API
 
-Per i sensori Zephyr ha un'API unica, uguale per centinaia di modelli:
+Su una scheda vera non si scrive un driver per ogni sensore: Zephyr ne ha già centinaia, e
+per i sensori offre un'API unica, uguale per tutti i modelli. Nel corso non la usiamo,
+perché il driver ufficiale del BME280 non funziona in Renode (riquadro nella sezione 7), ma
+è importante sapere com'è fatta:
 
 ```c
 const struct device *dev = DEVICE_DT_GET(DT_NODELABEL(bme280));
@@ -288,6 +354,9 @@ sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, &t);  /* 2. leggi un canale */
   `printk("%f")` serve `CONFIG_CBPRINTF_FP_SUPPORT=y` (il firmware cresce di qualche KB).
 - Il driver si attiva da solo quando nel devicetree c'è un nodo `compatible = "bosch,bme280"`
   con `status = "okay"` e in `prj.conf` c'è `CONFIG_SENSOR=y`.
+- Il vantaggio: se domani cambi sensore (per esempio un SHT3x al posto del BME280) cambi il
+  nodo nel devicetree, e il codice che chiama `sensor_sample_fetch`/`sensor_channel_get`
+  resta identico. È la stessa idea della tua interfaccia `bme280_corso.h`, in grande.
 
 ## 10. Watchdog
 
@@ -335,6 +404,8 @@ Comandi utili nel monitor per questo modulo:
 | `sysbus.gpio0.led0 State` | `True` se il LED 0 è acceso |
 | `sysbus.twi0.bme280` | mostra proprietà e metodi del sensore simulato |
 | `sysbus.twi0.bme280 <Proprietà>` | legge una proprietà; `sysbus.twi0.bme280 <Proprietà> 25.5` la imposta |
+| `sysbus.twi0.bme280 Temperature 35.5` | imposta la temperatura (°C); all'avvio vale 22.5 (lo imposta `renode/esercizio.resc`) |
+| `sysbus.twi0.bme280 Humidity 60` | imposta l'umidità relativa (%); all'avvio vale 45. C'è anche `Pressure` |
 | `logLevel 0 sysbus.twi0` | mostra ogni accesso al bus I2C (utile per il debug) |
 | `sysbus.wdt` | stato del watchdog simulato |
 

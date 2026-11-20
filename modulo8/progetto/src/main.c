@@ -16,7 +16,8 @@
  * compilato automaticamente, vedi CMakeLists.txt):
  *     main.c        avvio: prepara l'hardware, avvia i moduli, stampa NODO AVVIATO
  *     misura.h      struct misura (condivisa tra i moduli)
- *     sensore.c/h   thread di acquisizione (parla con il BME280)
+ *     bme280_corso.c/h  il TUO driver del sensore, copiato da modulo6/07_driver_bme280
+ *     sensore.c/h   thread di acquisizione (usa bme280_corso)
  *     filtro.c/h    media mobile (logica pura, testabile)
  *     allarme.c/h   macchina a stati dell'allarme con isteresi (logica pura, testabile)
  *     elabora.c/h   thread di elaborazione: coda -> filtro -> allarme -> uscite
@@ -26,7 +27,8 @@
  *     config.c/h    soglie e settings
  *
  * Hardware (app.overlay): alias led_allarme (led0), led_battito (led1),
- * pulsante_conferma (sw0), sensore_temperatura (BME280 su i2c0, 0x76).
+ * pulsante_conferma (sw0). Il BME280 (bus i2c0, indirizzo 0x76) lo comanda il tuo
+ * driver bme280_corso, senza nodo nel devicetree.
  *
  * Il comportamento richiesto e i formati di uscita (controllati dalle verifiche in
  * modulo8/verifiche/) sono descritti nei file dei passi.

@@ -17,18 +17,22 @@
  *   - sw2 imposta la soglia a (temperatura attuale + 1.00 C).
  *
  * PASSI (suggerimento di architettura: decidila tu, ma scrivila prima di programmare)
- * 1. Overlay con il nodo del BME280; gpio_dt_spec di led0, led1, sw0, sw1, sw2.
+ * 0. Prerequisito: l'esercizio 7 deve essere svolto. Questo esercizio compila il TUO
+ *    driver da ../07_driver_bme280/src (vedi CMakeLists.txt): niente copie.
+ * 1. gpio_dt_spec di led0, led1, sw0, sw1, sw2; in main() bme280c_init() (se fallisce:
+ *    "Errore init sensore: %d").
  * 2. Stato condiviso, protetto da un k_mutex:
  *        int32_t temperatura_c100;   (temperatura in centesimi di grado: 2534 = 25.34 C)
  *        int32_t soglia_c100 = 3000; (30.00 C)
  *        bool manutenzione = false;
  *        bool allarme = false;
- *    Lavorare in centesimi interi evita i numeri con la virgola. Conversione da
- *    sensor_value:  v.val1 * 100 + v.val2 / 10000.
+ *    Lavorare in centesimi interi evita i numeri con la virgola: il tuo driver li
+ *    restituisce gia' cosi' (bme280c_leggi_centesimi).
  * 3. Una funzione stampa_c100(const char *prefisso, int32_t c100) che stampa
  *    "<prefisso>25.34 C" gestendo anche i negativi.
  * 4. Thread di acquisizione (K_THREAD_DEFINE, priorita' 5, stack 1024), ogni 1000 ms:
- *    fetch + get, aggiorna temperatura_c100, stampa "Temperatura: XX.XX C", poi chiama
+ *    bme280c_leggi_centesimi (se fallisce: "Errore lettura: %d" e salta il giro),
+ *    aggiorna temperatura_c100, stampa "Temperatura: XX.XX C", poi chiama
  *    valuta_allarme():
  *      - in manutenzione: allarme = false, led0 spento;
  *      - altrimenti, se temperatura > soglia e non c'era allarme: allarme = true,
@@ -50,14 +54,14 @@
  *    e quali nel thread di acquisizione, e quali dati condividono. Scrivilo in fondo
  *    a questo commento.
  *
- * OUTPUT ATTESO (esempio, con il sensore simulato a 25 C)
+ * OUTPUT ATTESO (con il sensore simulato a 22.50 C, il valore iniziale in Renode)
  *     Modalita: automatica
  *     Soglia: 30.00 C
- *     Temperatura: 25.00 C
- *     Soglia: 24.00 C                         (sw1)
- *     ALLARME: 25.00 C oltre la soglia
- *     Temperatura: 25.00 C
- *     Soglia: 26.00 C                         (sw2)
+ *     Temperatura: 22.50 C
+ *     Soglia: 21.50 C                         (sw1)
+ *     ALLARME: 22.50 C oltre la soglia
+ *     Temperatura: 22.50 C
+ *     Soglia: 23.50 C                         (sw2)
  *     Allarme rientrato
  *     Modalita: manutenzione                  (sw0)
  *
@@ -82,8 +86,8 @@
  * - Isteresi: l'allarme rientra solo quando la temperatura scende sotto
  *   soglia - 0.50 C. Perche' serve? (Pensa a una temperatura che oscilla attorno alla
  *   soglia.) Ti servira' nel Modulo 8.
- * - Cambia la temperatura del sensore dal monitor di Renode (il comando trovato
- *   nell'esercizio 7) e osserva allarme e rientro.
+ * - Cambia la temperatura del sensore dal monitor di Renode
+ *   (sysbus.twi0.bme280 Temperature 35.5) e osserva allarme e rientro.
  * - Fai lampeggiare led0 durante l'allarme invece di tenerlo fisso (k_timer).
  *
  * LA MIA ARCHITETTURA (passo 7):
@@ -96,8 +100,9 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/printk.h>
+
+#include "bme280_corso.h"   /* il tuo driver, dall'esercizio 7 */
 
 /* TODO: device, stato condiviso, funzioni e thread (passi 1-5) */
 

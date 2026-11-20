@@ -25,7 +25,10 @@ Con `-Pausa` la scheda è caricata ma ferma. Si aprono due finestre: il **monito
    ripartito dall'inizio, come premendo il tasto di reset della scheda vera.
 3. **Le periferiche.** `peripherals` elenca tutto ciò che c'è nella scheda simulata, con
    l'indirizzo di ciascuna periferica. Trova `uart0`, `gpio0`, `twi0`, `wdt`.
-4. **Un LED.** `sysbus.gpio0.led0 State` → `False` (spento: nessuno l'ha acceso).
+4. **Un LED.** `sysbus.gpio0.led0 State` → `True`, anche se nessuno l'ha acceso! È un limite
+   della simulazione: il pin parte da 0 e i LED della scheda si accendono proprio con il pin
+   a 0 (sono *attivi bassi*). Sulla scheda vera il pin non configurato è un ingresso e il LED
+   resta spento. Quando nel Modulo 2 il firmware configurerà il LED, lo stato sarà corretto.
 5. **Un pulsante.** `sysbus.gpio0.sw0 Press`, poi `sysbus.gpio0.sw0 Pressed` (dice se è
    premuto; se il comando non esiste nella tua versione, scrivi `sysbus.gpio0.sw0` da solo
    per vedere quelli disponibili), poi `sysbus.gpio0.sw0 Release`. Il firmware non se ne accorge: non legge il

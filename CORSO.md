@@ -69,7 +69,16 @@ Dettagli del setup: Modulo 0 e [teoria/01_setup_toolchain.md](teoria/01_setup_to
   (convertitore analogico) e PWM. Per questo il corso non usa ADC e PWM, e per salvare dati
   in flash (Modulo 7) usa il **flash simulator** di Zephyr, che vive in RAM: le API sono
   quelle vere, ma i dati non sopravvivono a un reset completo.
+- Il modello I2C di Renode **non gestisce il repeated start**: `i2c_write_read`,
+  `i2c_reg_read_byte`, `i2c_burst_read` (e le versioni `_dt`) restituiscono 0 ma con dati
+  sbagliati. Funzionano invece due transazioni separate, `i2c_write` + `i2c_read`. Per
+  questo il driver ufficiale di Zephyr per il BME280 (sensor API) in Renode non si
+  inizializza, e nel corso il driver del sensore lo scrivi tu (Modulo 6, esercizio 7).
+  Dettagli: [teoria/07_periferiche_driver.md](teoria/07_periferiche_driver.md), sezione 7.
 - Nei pulsanti simulati non c'è il rimbalzo meccanico: lo si simula a mano (Modulo 6).
+- Un LED che il firmware **non ha mai configurato** in Renode risulta acceso (`State` =
+  `True`): il pin parte da 0 e i LED della DK si accendono con il pin a 0. Sulla scheda vera
+  resterebbe spento. Le verifiche controllano solo LED configurati dal firmware.
 - I tempi in Renode sono tempi *virtuali*: la misura di prestazioni assolute non ha senso,
   quella di tempi relativi e dell'ordine degli eventi sì.
 
@@ -104,7 +113,8 @@ Dettagli del setup: Modulo 0 e [teoria/01_setup_toolchain.md](teoria/01_setup_to
 
 ### Modulo 6 — Periferiche e driver
 - GPIO in ingresso (polling e interrupt), debounce, UART in polling e a interrupt, I2C
-  "grezzo" (lettura di registri), sensor API con il BME280, watchdog.
+  "grezzo" (lettura di registri), un driver del BME280 scritto da me (con la formula di
+  compensazione del datasheet; la sensor API di Zephyr come concetto), watchdog.
 
 ### Modulo 7 — Strumenti da professionista
 - Shell (comandi di sistema e comandi propri), `ztest`, errori fatali e `__ASSERT`, debug con
@@ -151,7 +161,10 @@ zephyr-corso/
   `OUTPUT ATTESO`, `CONCETTI NUOVI`, `COME VERIFICARE DA SOLO`, `ERRORI TIPICI`,
   `BONUS (facoltativo)`, e in fondo `Scrivi il tuo codice qui sotto.`
 - Sotto il commento c'è uno **scheletro che compila** (include e `main` vuoto o con i soli
-  punti da completare segnati `/* TODO: ... */`). Mai la soluzione.
+  punti da completare segnati `/* TODO: ... */`). Mai la soluzione. Gli avvisi
+  `defined but not used` che compaiono compilando lo scheletro riguardano variabili già
+  preparate per l'esercizio: spariscono quando le usi.
+- Collaudo del 20/11/2026: tutti gli scheletri compilano con Zephyr v4.5.0 e SDK 1.0.1.
 - `prj.conf` contiene solo le opzioni necessarie, ciascuna con un commento. Se l'esercizio
   chiede di aggiungere opzioni, lo dice la consegna.
 - Esercizi senza codice (installazione, esplorazione) sono file `.md` nella cartella del
@@ -175,7 +188,10 @@ zephyr-corso/
 - Nomi nella scheda simulata: UART della console `sysbus.uart0`, LED `sysbus.gpio0.led0..led3`
   (pin 13-16, `State` vale `True` se acceso), pulsanti `sysbus.gpio0.sw0..sw3`
   (pin 11, 12, 24, 25; comandi `Press` e `Release`), sensore `sysbus.twi0.bme280`
-  (indirizzo I2C `0x76`, nel devicetree Zephyr il bus è `i2c0`).
+  (indirizzo I2C `0x76`, nel devicetree Zephyr il bus è `i2c0`; proprietà `Temperature`,
+  `Humidity`, `Pressure`, per esempio `sysbus.twi0.bme280 Temperature 35.5`; all'avvio
+  22.5 °C, impostati da `renode/esercizio.resc`). Sul bus I2C usare solo `i2c_write` +
+  `i2c_read` (niente repeated start, vedi i limiti nella sezione 3).
 
 ## 6b. Teoria
 
@@ -339,13 +355,15 @@ la consegna e si scrive il codice sotto.
 - [ ] `modulo6/05_uart_interrupt` — **UART a interrupt.** Ricezione a interrupt, buffer di riga,
   comandi `on`/`off` per il LED.
 - [ ] `modulo6/06_i2c_registri` — **I2C a basso livello.** Leggere il registro ID del BME280
-  con `i2c_write_read_dt`, poi i dati di calibrazione.
-- [ ] `modulo6/07_sensore_api` — **Sensor API.** BME280 nel devicetree, `sensor_sample_fetch`,
-  `sensor_channel_get`, conversione di `sensor_value`.
+  e i coefficienti di calibrazione con `i2c_write` + `i2c_read`; repeated start e perché in
+  Renode non si usa.
+- [ ] `modulo6/07_driver_bme280` — **Un driver fatto da me: BME280.** `bme280_corso.c/.h`:
+  init, calibrazione, modo normal, formula di compensazione intera, temperatura in
+  centesimi. La sensor API di Zephyr come concetto. Riusato in 09 e nel progetto.
 - [ ] `modulo6/08_watchdog` — **Watchdog.** `wdt_install_timeout`, `wdt_feed` da un thread; cosa
   succede quando il thread si blocca.
-- [ ] `modulo6/09_riepilogo` — **Riepilogo: termostato.** Lettura periodica del sensore, soglia,
-  LED di allarme, pulsante per cambiare modalità.
+- [ ] `modulo6/09_riepilogo` — **Riepilogo: termostato.** Lettura periodica del sensore con il
+  driver dell'esercizio 7, soglia, LED di allarme, pulsanti per cambiare modalità e soglia.
 
 ### Modulo 7 — Strumenti da professionista
 
