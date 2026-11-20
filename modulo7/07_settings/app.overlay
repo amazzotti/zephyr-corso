@@ -1,0 +1,45 @@
+/*
+ * Flash simulata per Renode (gia' pronta: e' configurazione, non fa parte dell'esercizio).
+ *
+ * La piattaforma nRF52840 di Renode non simula il controller della flash (NVMC), quindi
+ * non possiamo cancellare/scrivere la flash vera come sulla scheda. Dichiariamo un
+ * "chip di flash" finto, gestito dal driver zephyr,sim-flash, che vive in RAM:
+ * 32 KB divisi in pagine da 4 KB, scrittura a blocchi di 4 byte (come il nRF52840).
+ *
+ * La partizione "storage_sim" e' indicata come partizione dei settings
+ * (chosen zephyr,settings-partition): settings e NVS la usano al posto della
+ * partizione "storage" della flash vera.
+ *
+ * Sulla scheda vera basterebbe togliere questo file: il codice in main.c non cambia.
+ */
+
+/ {
+	sim_flash_controller: sim_flash_controller {
+		compatible = "zephyr,sim-flash";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		erase-value = <0xff>;
+
+		flash_sim0: flash_sim@0 {
+			compatible = "soc-nv-flash";
+			reg = <0x00000000 0x8000>;
+			erase-block-size = <4096>;
+			write-block-size = <4>;
+
+			partitions {
+				compatible = "fixed-partitions";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				storage_sim: partition@0 {
+					label = "storage_sim";
+					reg = <0x00000000 0x8000>;
+				};
+			};
+		};
+	};
+
+	chosen {
+		zephyr,settings-partition = &storage_sim;
+	};
+};

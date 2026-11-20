@@ -1,0 +1,9 @@
+# Verifica del passo 2 (acquisizione)
+# Uso: .\verifica.ps1 modulo8\progetto -File modulo8\verifiche\02_acquisizione.txt
+monitor: sysbus.twi0.bme280 Temperature 22.5
+attendi: NODO AVVIATO
+attendi 15: MISURA #1 T=-?\d+\.\d\d C
+attendi 15: MISURA #2 T=-?\d+\.\d\d C
+# Il valore puo' differire di qualche centesimo da 22.50 (conversione del sensore)
+attendi 15: MISURA #3 T=22\.\d\d C
+mai: MISURA #\d+ ERRORE

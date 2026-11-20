@@ -1,0 +1,6 @@
+# Verifica dell'esercizio modulo3/04_thread_dinamici
+attendi: ^main: creo i lavoratori$
+attendi: ^lavoratore 1: somma 1\.\.10 = 55$
+attendi: ^lavoratore 2: somma 1\.\.100 = 5050$
+attendi: ^lavoratore 3: somma 1\.\.1000 = 500500$
+attendi: ^main: tutti i lavoratori hanno finito$

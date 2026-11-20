@@ -1,0 +1,16 @@
+# Verifica dell'esercizio modulo6/03_debounce
+attendi: Booting Zephyr OS
+attendi: Pronto: premi sw0
+monitor: sysbus.gpio0.sw0 Press
+attendi: ^Pressioni valide: 1$
+controlla: sysbus.gpio0.led0 State => True
+monitor: sysbus.gpio0.sw0 Release
+attendi: ^Rilasciato
+monitor: sysbus.gpio0.sw0 Press
+attendi: ^Pressioni valide: 2$
+controlla: sysbus.gpio0.led0 State => False
+monitor: sysbus.gpio0.sw0 Release
+attendi: ^Rilasciato
+pausa: 300
+mai: ^Pressioni valide: 3
+mai: Errore

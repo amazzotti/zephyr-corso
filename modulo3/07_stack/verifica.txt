@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo3/07_stack, caso normale (PROFONDITA 5)
+attendi: ^ricorsione: scendo di 5 livelli$
+attendi: ^profondita raggiunta$
+attendi: ^ricorsione: risultato 15$
+attendi: ricorsione\s*: STACK: unused \d+ usage \d+ / \d+
+attendi: ^main: analisi fatta$
+mai: FATAL ERROR

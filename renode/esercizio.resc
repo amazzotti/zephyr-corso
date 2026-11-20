@@ -1,0 +1,21 @@
+:name: Esercizio del corso Zephyr
+:description: Crea la scheda nRF52840 DK simulata e carica il firmware dell'esercizio.
+
+# Variabili impostate da esegui.ps1 / verifica.ps1 prima di includere questo file:
+#   $bin   = firmware (build/zephyr/zephyr.elf)
+#   $repl  = descrizione della scheda (renode/nrf52840dk.repl)
+
+using sysbus
+mach create "nrf52840dk"
+machine LoadPlatformDescription $repl
+
+# Mostra solo gli errori di Renode. Per vedere anche gli avvisi (per esempio accessi a
+# registri che il simulatore non modella) scrivi nel monitor:  logLevel 2   (o 0 per tutto)
+logLevel 3
+
+# "machine Reset" ricarica il firmware e riparte da capo.
+macro reset
+"""
+    sysbus LoadELF $bin
+"""
+runMacro $reset

@@ -1,0 +1,16 @@
+# Verifica dell'esercizio modulo1/01_tipi
+attendi: Booting Zephyr OS
+attendi: ^sizeof\(char\) = 1$
+attendi: ^sizeof\(short\) = 2$
+attendi: ^sizeof\(int\) = 4$
+attendi: ^sizeof\(long\) = 4$
+attendi: ^sizeof\(long long\) = 8$
+attendi: ^sizeof\(uint8_t\) = 1$
+attendi: ^sizeof\(uint16_t\) = 2$
+attendi: ^sizeof\(uint32_t\) = 4$
+attendi: ^sizeof\(uint64_t\) = 8$
+attendi: ^sizeof\(void \*\) = 4$
+attendi: ^uint8_t: 250 \+ 10 = 4$
+attendi: ^int8_t: 127 \+ 1 = -128$
+attendi: ^uint32_t: 3 - 5 = 4294967294$
+attendi: ^-1 < 1u \? NO$

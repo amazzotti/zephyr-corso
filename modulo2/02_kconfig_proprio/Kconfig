@@ -1,0 +1,26 @@
+# Opzioni Kconfig PROPRIE di questa applicazione.
+# Zephyr legge automaticamente il file "Kconfig" nella cartella dell'applicazione.
+#
+# Regole di scrittura:
+#   - il nome qui si scrive SENZA "CONFIG_" (in prj.conf e nel codice CON "CONFIG_");
+#   - indentazione con TAB; il testo di "help" con TAB + 2 spazi.
+
+mainmenu "Esercizio Kconfig proprio"
+
+config CORSO_NOME
+	string "Nome da salutare"
+	default "Mondo"
+	help
+	  Il nome usato nel saluto.
+
+# TODO (passo 2): aggiungi l'opzione intera CORSO_RIPETIZIONI
+#   - tipo int, descrizione "Quante volte salutare"
+#   - default 3
+#   - range 1 10
+#
+# TODO (passo 4): aggiungi l'opzione booleana CORSO_FORMALE
+#   - tipo bool, descrizione "Saluto formale"
+#   - default n
+
+# Questa riga deve restare IN FONDO: carica tutte le opzioni di Zephyr.
+source "Kconfig.zephyr"

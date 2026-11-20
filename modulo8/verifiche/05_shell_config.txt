@@ -1,0 +1,21 @@
+# Verifica del passo 5 (shell e configurazione)
+# Uso: .\verifica.ps1 modulo8\progetto -File modulo8\verifiche\05_shell_config.txt
+monitor: sysbus.twi0.bme280 Temperature 22
+attendi 15: uart:~\$
+pausa: 3000
+scrivi: soglia get
+attendi: Soglia: 30\.00 C
+scrivi: soglia set 28.5
+attendi: Soglia impostata: 28\.50 C \(salvata\)
+scrivi: soglia get
+attendi: Soglia: 28\.50 C
+scrivi: stato
+attendi: Temperatura media: 2[12]\.\d\d C
+attendi: Soglia: 28\.50 C
+attendi: Allarme: NO
+scrivi: storico
+attendi: #\d+ t=\d+ ms T=2[12]\.\d\d C
+scrivi: soglia set abc
+attendi: valore non valido: abc
+scrivi: soglia set 1.234
+attendi: valore non valido: 1\.234

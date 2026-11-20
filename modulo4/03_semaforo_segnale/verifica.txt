@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo4/03_semaforo_segnale
+attendi: Semaforo come segnale: avvio
+attendi: Ricevuto segnale 1: dato 10
+attendi: Ricevuto segnale 2: dato 20
+attendi: Ricevuto segnale 3: dato 30
+attendi: Ricevuto segnale 4: dato 40
+attendi: Ricevuto segnale 5: dato 50
+attendi: Timeout: nessun segnale da 1500 ms
+mai: Ricevuto segnale 6

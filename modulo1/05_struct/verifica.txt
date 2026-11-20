@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo1/05_struct
+attendi: ^sizeof\(struct misura\) = 8$
+attendi: ^sizeof\(struct misura_disordinata\) = 12$
+attendi: ^t=1000 ms sensore 1: 21\.5 C$
+attendi: ^t=2000 ms sensore 1: 23\.0 C$
+attendi: ^t=3000 ms sensore 2: 19\.8 C$
+attendi: ^media = 21\.4 C$
+attendi: ^per valore: 21\.5 C$
+attendi: ^per puntatore: 22\.5 C$

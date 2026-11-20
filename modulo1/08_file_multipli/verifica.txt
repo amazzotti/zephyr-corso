@@ -1,0 +1,6 @@
+# Verifica dell'esercizio modulo1/08_file_multipli
+attendi: ^somma = 83$
+attendi: ^min = -3$
+attendi: ^max = 45$
+attendi: ^media = 13\.8$
+attendi: ^chiamate = 4$

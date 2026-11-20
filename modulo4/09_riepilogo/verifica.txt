@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo4/09_riepilogo
+attendi: Pipeline avviata
+attendi: ^n=1 grezzo=218 media=218$
+attendi: ^n=2 grezzo=205 media=211$
+attendi: ^n=3 grezzo=210 media=211$
+attendi 30: ^Statistiche: campioni=20 min=202 max=218$
+attendi 30: ^Statistiche: campioni=40 min=202 max=363$

@@ -1,0 +1,11 @@
+# Verifica dell'esercizio modulo6/01_pulsante_polling
+attendi: Booting Zephyr OS
+attendi: Pronto: premi sw0
+controlla: sysbus.gpio0.led0 State => False
+monitor: sysbus.gpio0.sw0 Press
+attendi: ^Premuto
+controlla: sysbus.gpio0.led0 State => True
+monitor: sysbus.gpio0.sw0 Release
+attendi: ^Rilasciato
+controlla: sysbus.gpio0.led0 State => False
+mai: Errore

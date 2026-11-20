@@ -1,0 +1,11 @@
+# Verifica dell'esercizio modulo5/07_riepilogo
+attendi: Battito e supervisore avviati
+# All'inizio l'allarme e' spento.
+controlla: sysbus.gpio0.led1 State => False
+attendi: ^Acquisizione: ciclo 1
+attendi: ^Comunicazione: ciclo 5
+attendi: ^Comunicazione: mi blocco \(simulato\)
+attendi 20: ^SUPERVISORE: thread 'comunicazione' bloccato
+controlla: sysbus.gpio0.led1 State => True
+attendi: ^Acquisizione: ciclo 1[0-9]
+mai: thread 'acquisizione' bloccato

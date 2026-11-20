@@ -1,0 +1,4 @@
+# Verifica dell'esercizio modulo4/01_race_condition
+attendi: Avvio: due thread, 10000 incrementi ciascuno
+attendi 30: ^Totale: \d+ \(atteso 20000\)
+attendi: ATTENZIONE: persi [1-9]\d* incrementi

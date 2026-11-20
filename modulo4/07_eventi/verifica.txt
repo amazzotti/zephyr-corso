@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo4/07_eventi
+attendi: Attendo sensore e rete
+attendi: Sensore pronto
+attendi: Rete pronta
+attendi: Sistema pronto \(eventi 0x3\) dopo \d+ ms
+attendi: Comando inviato
+attendi: Evento ricevuto: comando
+mai: Timeout di avvio
+mai: Evento ricevuto: errore

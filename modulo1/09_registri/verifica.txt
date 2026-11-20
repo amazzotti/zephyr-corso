@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo1/09_registri
+attendi: ^DEVICEID = 0x[0-9a-f]{16}$
+attendi: ^LED acceso$
+attendi: ^OUT bit 13 = 0$
+attendi: ^LED spento$
+attendi: ^OUT bit 13 = 1$
+attendi: ^LED acceso di nuovo$
+pausa: 300
+controlla: sysbus.gpio0.led0 State => True

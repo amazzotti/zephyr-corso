@@ -1,0 +1,5 @@
+# Verifica dell'esercizio modulo7/05_debug_gdb (dopo la correzione del bug)
+attendi: lettura 1: media = 30, soglia = 50
+attendi: lettura 2: media = 31, soglia = 50
+attendi: lettura 3: media = 32, soglia = 50
+mai: ERRORE

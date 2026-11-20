@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo6/06_i2c_registri
+attendi: Booting Zephyr OS
+attendi: indirizzo 0x76
+attendi: ^ID chip: 0x60$
+attendi: ^BME280 trovato$
+attendi: ^Calibrazione:( [0-9a-f]{2}){6}\s*$
+attendi: ^dig_T1 = \d+, dig_T2 = -?\d+, dig_T3 = -?\d+
+mai: Errore
+mai: Chip sconosciuto

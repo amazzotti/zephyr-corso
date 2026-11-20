@@ -1,0 +1,6 @@
+# Verifica dell'esercizio modulo7/06_memoria
+attendi: lavoratore: giro 0
+attendi 20: Thread analyze
+attendi: lavoratore\s*: STACK: unused
+attendi 20: lavoratore: giro 10
+mai: FATAL ERROR

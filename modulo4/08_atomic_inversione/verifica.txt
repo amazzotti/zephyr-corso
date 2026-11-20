@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo4/08_atomic_inversione
+attendi: ^Parte A
+attendi 30: Atomic: totale 20000 \(atteso 20000\)
+attendi: ^Parte B
+attendi 30: Scenario semaforo: alta ha atteso \d+ ms
+attendi 30: Scenario mutex: alta ha atteso \d+ ms
+attendi: Inversione evitata dal mutex: si

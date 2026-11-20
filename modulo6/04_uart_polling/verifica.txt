@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo6/04_uart_polling
+attendi: Booting Zephyr OS
+attendi: Scrivi una riga e premi Invio
+scrivi: ciao zephyr
+attendi: Riga \(11 caratteri\): ciao zephyr$
+scrivi: 123
+attendi: Riga \(3 caratteri\): 123$
+# La riga vuota dopo '\r' non va stampata.
+mai: Riga \(0 caratteri\)

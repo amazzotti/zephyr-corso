@@ -1,0 +1,8 @@
+# Verifica dell'esercizio modulo2/08_riepilogo (CONFIG_CORSO_PERIODO_MS=800, alias su led1)
+attendi: <inf> riepilogo: Periodo: 800 ms$
+attendi: <inf> riepilogo: LED acceso$
+controlla: sysbus.gpio0.led1 State => True
+attendi: <inf> riepilogo: LED spento$
+controlla: sysbus.gpio0.led1 State => False
+attendi: <inf> riepilogo: LED acceso$
+controlla: sysbus.gpio0.led1 State => True

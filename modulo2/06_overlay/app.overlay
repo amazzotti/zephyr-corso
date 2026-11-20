@@ -1,0 +1,14 @@
+/*
+ * Overlay dell'applicazione: viene AGGIUNTO al devicetree della scheda nrf52840dk.
+ * Zephyr usa automaticamente il file "app.overlay" nella cartella dell'applicazione.
+ *
+ * TODO (passo 1): dentro il nodo radice "/" aggiungi
+ *   - un nodo "aliases" con l'alias  allarme = &led2;
+ *   - un nodo "zephyr,user" con le proprieta'
+ *         soglia = <30>;
+ *         nome-nodo = "nodo-01";
+ * Sintassi: teoria/03_build_kconfig_devicetree.md, sezione 8.
+ */
+
+/ {
+};

@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo2/02_kconfig_proprio
+# Impostazioni finali attese: CONFIG_CORSO_RIPETIZIONI=4, CONFIG_CORSO_FORMALE=y
+attendi: ^Buongiorno, Zephyr! \(1/4\)$
+attendi: ^Buongiorno, Zephyr! \(2/4\)$
+attendi: ^Buongiorno, Zephyr! \(3/4\)$
+attendi: ^Buongiorno, Zephyr! \(4/4\)$
+mai: \(5/4\)
+mai: \(0/4\)
+mai: ^Ciao, Zephyr

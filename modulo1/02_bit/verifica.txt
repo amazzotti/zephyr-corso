@@ -1,0 +1,11 @@
+# Verifica dell'esercizio modulo1/02_bit
+attendi: ^iniziale: 0x00000000$
+attendi: ^set bit 3: 0x00000008$
+attendi: ^set bit 0,5: 0x00000029$
+attendi: ^clear bit 3: 0x00000021$
+attendi: ^toggle bit 31: 0x80000021$
+attendi: ^bit 5 = 1$
+attendi: ^bit 4 = 0$
+attendi: ^campo 8\.\.10 = 5: 0x80000521$
+attendi: ^campo letto = 5$
+attendi: ^bit a 1 = 5$

@@ -1,0 +1,6 @@
+# Verifica dell'esercizio modulo3/07_stack, caso overflow (PROFONDITA 40)
+# Uso: .\verifica.ps1 modulo3\07_stack -File modulo3\07_stack\verifica_overflow.txt
+# La sentinella viene controllata al cambio di contesto: il thread potrebbe riuscire a
+# stampare il risultato PRIMA che l'errore venga scoperto (quando va a dormire).
+attendi: ^ricorsione: scendo di 40 livelli$
+attendi 20: FATAL ERROR

@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo3/02_priorita
+attendi: ^goloso: giro 5$
+attendi: ^goloso: dormo$
+attendi: ^gentile: goloso ha fatto 5 giri$
+attendi: ^goloso: giro 10$
+attendi: ^gentile: goloso ha fatto 10 giri$
+attendi: ^goloso: giro 15$
+# Gentile non deve mai vedere un numero di giri non multiplo di 5.
+mai: ^gentile: goloso ha fatto \d*[1-46-9] giri

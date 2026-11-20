@@ -1,0 +1,11 @@
+# Verifica dell'esercizio modulo7/01_shell
+attendi: Booting Zephyr OS
+attendi 15: uart:~\$
+scrivi: kernel version
+attendi: Zephyr version
+scrivi: device list
+attendi: gpio@50000000
+scrivi: kernel uptime
+attendi: Uptime
+attendi 20: battito 1
+attendi 20: battito 2

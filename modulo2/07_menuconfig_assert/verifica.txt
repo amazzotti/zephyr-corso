@@ -1,0 +1,6 @@
+# Verifica dell'esercizio modulo2/07_menuconfig_assert (con CONFIG_ASSERT=y in prj.conf)
+attendi: ^Risultato: 5$
+attendi: ASSERTION FAIL \[b != 0\]
+attendi: divisore nullo \(a = 10\)
+attendi: FATAL ERROR
+mai: ^Risultato: 0$

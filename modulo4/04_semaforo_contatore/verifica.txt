@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo4/04_semaforo_contatore
+attendi: Pool di 3 risorse, 5 lavoratori
+attendi: Lavoratore \d: prendo una risorsa \(in uso: 1\)
+attendi: Lavoratore \d: prendo una risorsa \(in uso: 3\)
+attendi: Lavoratore \d: libero la risorsa
+attendi 30: Fine\. Massimo contemporaneo: 3$
+mai: in uso: [4-9]

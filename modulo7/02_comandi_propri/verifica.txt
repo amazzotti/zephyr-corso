@@ -1,0 +1,18 @@
+# Verifica dell'esercizio modulo7/02_comandi_propri
+attendi 15: uart:~\$
+scrivi: led on
+attendi: LED acceso
+controlla: sysbus.gpio0.led0 State => True
+scrivi: led stato
+attendi: LED: acceso
+scrivi: led off
+attendi: LED spento
+controlla: sysbus.gpio0.led0 State => False
+scrivi: conta
+attendi: conta = 1
+scrivi: conta
+attendi: conta = 2
+scrivi: somma 2 3
+attendi: 2 \+ 3 = 5
+scrivi: somma 2 x
+attendi: argomento non valido: x

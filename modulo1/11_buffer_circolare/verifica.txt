@@ -1,0 +1,13 @@
+# Verifica dell'esercizio modulo1/11_buffer_circolare
+attendi: ^\[OK\] vuoto dopo init$
+attendi: ^\[OK\] conta 0 dopo init$
+attendi: ^\[OK\] pop da vuoto fallisce$
+attendi: ^\[OK\] push di 42$
+attendi: ^\[OK\] pop restituisce 42$
+attendi: ^\[OK\] riempito con 8$
+attendi: ^\[OK\] push su pieno fallisce$
+attendi: ^\[OK\] ordine FIFO$
+attendi: ^\[OK\] giro degli indici$
+attendi: ^\[OK\] vuoto alla fine$
+attendi: ^RISULTATO: 10/10 test superati$
+mai: \[ERRORE\]

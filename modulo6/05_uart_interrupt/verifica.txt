@@ -1,0 +1,17 @@
+# Verifica dell'esercizio modulo6/05_uart_interrupt
+attendi: Booting Zephyr OS
+attendi: Comandi: on, off, stato
+scrivi: on
+attendi: ^LED acceso$
+controlla: sysbus.gpio0.led0 State => True
+scrivi: stato
+attendi: ^LED: acceso$
+scrivi: off
+attendi: ^LED spento$
+controlla: sysbus.gpio0.led0 State => False
+scrivi: stato
+attendi: ^LED: spento$
+scrivi: ciao
+attendi: ^Comando sconosciuto: ciao$
+# Nessuna riga vuota o con '\r' deve arrivare come comando.
+mai: Comando sconosciuto: $

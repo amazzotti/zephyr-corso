@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo0/05_ciclo_infinito
+attendi: Booting Zephyr OS
+attendi: ^Avvio del ciclo$
+attendi: ^Conteggio: 0 - uptime: \d+ ms$
+attendi: ^Conteggio: 1 - uptime: \d+ ms$
+attendi: ^Conteggio: 2 - uptime: \d+ ms$
+attendi 15: ^Conteggio: 5 - uptime: \d+ ms$

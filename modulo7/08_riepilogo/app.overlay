@@ -1,0 +1,35 @@
+/*
+ * Flash simulata per Renode: identica a modulo7/07_settings/app.overlay
+ * (leggi la spiegazione li'). Gia' pronta, non fa parte dell'esercizio.
+ */
+
+/ {
+	sim_flash_controller: sim_flash_controller {
+		compatible = "zephyr,sim-flash";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		erase-value = <0xff>;
+
+		flash_sim0: flash_sim@0 {
+			compatible = "soc-nv-flash";
+			reg = <0x00000000 0x8000>;
+			erase-block-size = <4096>;
+			write-block-size = <4>;
+
+			partitions {
+				compatible = "fixed-partitions";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				storage_sim: partition@0 {
+					label = "storage_sim";
+					reg = <0x00000000 0x8000>;
+				};
+			};
+		};
+	};
+
+	chosen {
+		zephyr,settings-partition = &storage_sim;
+	};
+};

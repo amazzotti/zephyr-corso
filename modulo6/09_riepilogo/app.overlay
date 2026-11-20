@@ -1,0 +1,8 @@
+/*
+ * Overlay dell'esercizio modulo6/09_riepilogo.
+ *
+ * TODO: il nodo del BME280 (come negli esercizi 06 e 07).
+ * Facoltativo: alias tuoi per i ruoli dei LED e dei pulsanti, per esempio
+ *     / { aliases { led-allarme = &led0; puls-modo = &button0; }; };
+ * cosi' nel codice scrivi DT_ALIAS(led_allarme) invece di DT_ALIAS(led0).
+ */

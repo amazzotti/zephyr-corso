@@ -1,0 +1,41 @@
+# Verifica dell'esercizio modulo6/09_riepilogo
+attendi: Booting Zephyr OS
+attendi: ^Modalita: automatica$
+attendi: ^Soglia: 30\.00 C$
+attendi: ^Temperatura: -?\d+\.\d{2} C$
+
+# sw1: soglia sotto la temperatura -> allarme
+monitor: sysbus.gpio0.sw1 Press
+pausa: 200
+monitor: sysbus.gpio0.sw1 Release
+attendi: ^Soglia: -?\d+\.\d{2} C$
+attendi 15: ^ALLARME: -?\d+\.\d{2} C oltre la soglia
+controlla: sysbus.gpio0.led0 State => True
+
+# sw2: soglia sopra la temperatura -> rientro
+monitor: sysbus.gpio0.sw2 Press
+pausa: 200
+monitor: sysbus.gpio0.sw2 Release
+attendi: ^Soglia: -?\d+\.\d{2} C$
+attendi 15: ^Allarme rientrato$
+controlla: sysbus.gpio0.led0 State => False
+
+# di nuovo in allarme, poi manutenzione: l'allarme si spegne, led1 si accende
+monitor: sysbus.gpio0.sw1 Press
+pausa: 200
+monitor: sysbus.gpio0.sw1 Release
+attendi 15: ^ALLARME:
+monitor: sysbus.gpio0.sw0 Press
+pausa: 200
+monitor: sysbus.gpio0.sw0 Release
+attendi: ^Modalita: manutenzione$
+controlla: sysbus.gpio0.led1 State => True
+controlla: sysbus.gpio0.led0 State => False
+
+# di nuovo automatica
+monitor: sysbus.gpio0.sw0 Press
+pausa: 200
+monitor: sysbus.gpio0.sw0 Release
+attendi: ^Modalita: automatica$
+controlla: sysbus.gpio0.led1 State => False
+mai: Errore

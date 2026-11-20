@@ -1,0 +1,6 @@
+/*
+ * Overlay dell'esercizio modulo6/07_sensore_api.
+ *
+ * TODO (passo 1): copia qui il nodo del BME280 che hai scritto nell'esercizio 06.
+ * Questa volta, con CONFIG_SENSOR=y, Zephyr compila anche il driver del sensore.
+ */

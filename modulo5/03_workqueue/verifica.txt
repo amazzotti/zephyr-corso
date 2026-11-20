@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo5/03_workqueue
+attendi: Work queue di sistema: avvio
+attendi: ^Lavoro n=1 nel thread 'sysworkq' \(submit: 1, 0\)
+attendi: ^Lavoro n=2 nel thread 'sysworkq'
+attendi: ^Lavoro n=5 nel thread 'sysworkq' \(submit: 1, 0\)
+attendi: ^Fine
+mai: Lavoro n=6

@@ -1,0 +1,12 @@
+# Verifica del passo 3 (elaborazione: media mobile, soglia con isteresi, LED0)
+# Uso: .\verifica.ps1 modulo8\progetto -File modulo8\verifiche\03_elaborazione.txt
+monitor: sysbus.twi0.bme280 Temperature 22
+attendi: NODO AVVIATO
+attendi 15: MEDIA T=
+controlla: sysbus.gpio0.led0 State => False
+monitor: sysbus.twi0.bme280 Temperature 35
+attendi 30: ALLARME ATTIVO \(media \d+\.\d\d >= soglia 30\.00\)
+controlla: sysbus.gpio0.led0 State => True
+monitor: sysbus.twi0.bme280 Temperature 20
+attendi 30: ALLARME RIENTRATO
+controlla: sysbus.gpio0.led0 State => False

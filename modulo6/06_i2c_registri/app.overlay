@@ -1,0 +1,7 @@
+/*
+ * Overlay dell'esercizio modulo6/06_i2c_registri.
+ *
+ * TODO (passo 1 della consegna in src/main.c): aggiungi qui sotto il nodo del sensore
+ * BME280 come figlio del bus i2c0, con etichetta "bme280", compatible "bosch,bme280"
+ * e indirizzo 0x76. Lo schema e' in teoria/07_periferiche_driver.md, sezione 7.
+ */

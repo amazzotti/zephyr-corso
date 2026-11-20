@@ -1,0 +1,57 @@
+/*
+ * Hardware del nodo di monitoraggio (gia' pronto: e' configurazione).
+ *
+ * - alias con nomi "di progetto" per LED e pulsante: nel codice usa
+ *   DT_ALIAS(led_allarme), DT_ALIAS(led_battito), DT_ALIAS(pulsante_conferma)
+ *   (nel devicetree il trattino diventa underscore nelle macro).
+ * - sensore Bosch BME280 sul bus i2c0 (twi0 in Renode), indirizzo 0x76.
+ * - flash simulata in RAM per i settings (vedi modulo7/07_settings/app.overlay):
+ *   Renode non simula il controller della flash del nRF52840.
+ */
+
+/ {
+	aliases {
+		led-allarme = &led0;
+		led-battito = &led1;
+		pulsante-conferma = &button0;
+		sensore-temperatura = &bme280;
+	};
+
+	sim_flash_controller: sim_flash_controller {
+		compatible = "zephyr,sim-flash";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		erase-value = <0xff>;
+
+		flash_sim0: flash_sim@0 {
+			compatible = "soc-nv-flash";
+			reg = <0x00000000 0x8000>;
+			erase-block-size = <4096>;
+			write-block-size = <4>;
+
+			partitions {
+				compatible = "fixed-partitions";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				storage_sim: partition@0 {
+					label = "storage_sim";
+					reg = <0x00000000 0x8000>;
+				};
+			};
+		};
+	};
+
+	chosen {
+		zephyr,settings-partition = &storage_sim;
+	};
+};
+
+&i2c0 {
+	status = "okay";
+
+	bme280: bme280@76 {
+		compatible = "bosch,bme280";
+		reg = <0x76>;
+	};
+};

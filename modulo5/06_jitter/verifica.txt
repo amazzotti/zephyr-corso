@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo5/06_jitter
+# I numeri dipendono dal tempo simulato: si controlla il formato e il confronto finale.
+attendi: Misura della deriva su 50 periodi da 100 ms
+attendi 60: ^Ciclo con k_msleep: 50 periodi in \d+ ms \(ideale 5000, deriva \d+ ms\)
+attendi 60: ^Ciclo con k_timer: 50 periodi in \d+ ms \(ideale 5000, deriva -?\d+ ms\)
+attendi: ^Jitter massimo k_timer: \d+ ms
+attendi: ^Deriva minore con k_timer: si

@@ -1,0 +1,8 @@
+# Verifica dell'esercizio modulo3/06_time_slicing (con CONFIG_TIMESLICE_SIZE=20)
+# Non importa chi parte per primo. Con il time slicing ENTRAMBI stampano "blocco 0"
+# prima che uno dei due abbia finito, quindi dopo i due "blocco 0" devono arrivare
+# ancora DUE righe "fine". Senza time slicing la seconda "fine" non si trova.
+attendi: [AB]: blocco 0
+attendi: [AB]: blocco 0
+attendi 20: [AB]: fine
+attendi 20: [AB]: fine

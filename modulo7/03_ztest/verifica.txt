@@ -1,0 +1,5 @@
+# Verifica dell'esercizio modulo7/03_ztest
+# Almeno 7 test superati (pass = 7, 8, 9 o due cifre) e nessun test fallito.
+attendi 30: \[ringbuf\]: pass = ([7-9]|\d\d+),
+attendi 30: PROJECT EXECUTION SUCCESSFUL
+mai: ^\s*FAIL -

@@ -1,0 +1,5 @@
+# Verifica dell'esercizio modulo4/02_mutex
+attendi: Avvio: due thread con mutex
+attendi 30: ^Totale: 20000 \(atteso 20000\)
+attendi: Lock trovato occupato: \d+ volte
+mai: persi

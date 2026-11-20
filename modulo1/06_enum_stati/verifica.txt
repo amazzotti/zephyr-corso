@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo1/06_enum_stati
+attendi: ^ROSSO=0 VERDE=1 GIALLO=2$
+attendi: ^stato: ROSSO \(3000 ms\)$
+attendi: ^stato: VERDE \(2000 ms\)$
+attendi: ^stato: GIALLO \(1000 ms\)$
+attendi: ^stato: ROSSO \(3000 ms\)$
+attendi: ^stato: VERDE \(2000 ms\)$
+attendi: ^stato: GIALLO \(1000 ms\)$
+attendi 20: ^fine dopo 2 cicli$

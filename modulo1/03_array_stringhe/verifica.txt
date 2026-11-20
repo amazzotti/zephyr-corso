@@ -1,0 +1,10 @@
+# Verifica dell'esercizio modulo1/03_array_stringhe
+attendi: ^voti: 7 8 6 9 6$
+attendi: ^somma = 36$
+attendi: ^media = 7\.2$
+attendi: ^sizeof\(voti\) = 20, elementi = 5$
+attendi: ^sizeof\(nome\) = 7, strlen\(nome\) = 6$
+attendi: ^nome\[0\] = 'Z' \(codice 90\)$
+attendi: ^maiuscolo: ZEPHYR RTOS$
+attendi: ^buf = "T=23 C" \(lunghezza 6\)$
+attendi: ^troncato: "Tempera" \(servivano 14\)$

@@ -1,0 +1,10 @@
+# Verifica dell'esercizio modulo2/03_logging (livello finale: LOG_LEVEL_INF)
+# "Fine main" non e' controllata: con il logging deferred puo' comparire in punti diversi.
+attendi: <inf> esercizio: Avvio$
+attendi: <wrn> esercizio: Temperatura alta: 85$
+attendi: <err> esercizio: Sensore non risponde$
+attendi: <inf> esercizio: Buffer ricevuto
+attendi: de ad be ef 01 02 03 04
+pausa: 500
+mai: <dbg>
+mai: Valore grezzo letto

@@ -1,0 +1,11 @@
+# Verifica dell'esercizio modulo1/04_puntatori
+attendi: ^a = 10, \*p = 10$
+attendi: ^dopo \*p = 20: a = 20$
+attendi: ^p punta ad a\? SI$
+attendi: ^swap: x = 7, y = 3$
+attendi: ^min = -2, max = 9$
+attendi: ^\*\(q \+ 2\) = 30$
+attendi: ^\(q \+ 1\) - q in byte = 4$
+attendi: ^somma con puntatore = 100$
+attendi: ^trovato 30 all'indice 2$
+attendi: ^99 non trovato$

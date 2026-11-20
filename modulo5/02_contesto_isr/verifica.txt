@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo5/02_contesto_isr (con ESPERIMENTO_SLEEP_IN_ISR 0)
+attendi: ^In main: k_is_in_isr = 0
+attendi: ^Nel callback: k_is_in_isr = 1
+attendi: ^Thread svegliato 1 volte \(k_is_in_isr = 0\)
+attendi: ^Thread svegliato 5 volte \(k_is_in_isr = 0\)
+attendi: ^Fine
+mai: ASSERTION FAIL
+mai: FATAL ERROR
+mai: Thread svegliato 6

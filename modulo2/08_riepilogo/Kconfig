@@ -1,0 +1,9 @@
+# Opzioni proprie dell'esercizio di riepilogo del Modulo 2.
+#
+# TODO: aggiungi l'opzione CORSO_PERIODO_MS
+#   - int, descrizione "Mezzo periodo del lampeggio in millisecondi"
+#   - default 500
+#   - range 100 5000
+#   - un help di una riga
+
+source "Kconfig.zephyr"

@@ -1,0 +1,17 @@
+# Verifica del passo 6 (guasto del sensore, watchdog)
+# Uso: .\verifica.ps1 modulo8\progetto -File modulo8\verifiche\06_robustezza.txt
+monitor: sysbus.twi0.bme280 Temperature 22
+attendi 15: uart:~\$
+pausa: 2000
+scrivi: guasto on
+attendi 15: ERRORE SENSORE
+scrivi: stato
+attendi: Sensore: GUASTO
+scrivi: guasto off
+attendi 15: SENSORE OK
+scrivi: stato
+attendi: Sensore: OK
+# Elaborazione bloccata: il watchdog deve riavviare il nodo entro 5 s
+scrivi: blocca
+attendi 30: Booting Zephyr OS
+attendi 15: NODO AVVIATO

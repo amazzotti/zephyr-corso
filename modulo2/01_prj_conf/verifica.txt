@@ -1,0 +1,6 @@
+# Verifica dell'esercizio modulo2/01_prj_conf
+attendi: ^Banner: no$
+attendi: ^Tick al secondo: \d+$
+attendi: ^Stack di main: \d+ byte$
+attendi: ^Scheda: nrf52840dk
+mai: Booting Zephyr OS

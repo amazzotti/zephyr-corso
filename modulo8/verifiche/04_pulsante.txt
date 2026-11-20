@@ -1,0 +1,18 @@
+# Verifica del passo 4 (conferma dell'allarme con SW0)
+# Uso: .\verifica.ps1 modulo8\progetto -File modulo8\verifiche\04_pulsante.txt
+monitor: sysbus.twi0.bme280 Temperature 22
+attendi: NODO AVVIATO
+# Pressione senza allarme: non deve succedere nulla
+monitor: sysbus.gpio0.sw0 Press
+pausa: 200
+monitor: sysbus.gpio0.sw0 Release
+monitor: sysbus.twi0.bme280 Temperature 35
+attendi 30: ALLARME ATTIVO
+controlla: sysbus.gpio0.led0 State => True
+monitor: sysbus.gpio0.sw0 Press
+pausa: 200
+monitor: sysbus.gpio0.sw0 Release
+attendi 5: ALLARME CONFERMATO
+controlla: sysbus.gpio0.led0 State => False
+monitor: sysbus.twi0.bme280 Temperature 20
+attendi 30: ALLARME RIENTRATO

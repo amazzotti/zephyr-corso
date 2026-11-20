@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo4/05_msgq
+attendi: Coda di messaggi: 8 posti
+attendi: Misura n=1 valore=20\.1 C \(in coda: 0\)
+attendi: Misura n=2 valore=20\.2 C
+attendi: Misura n=10 valore=20\.3 C
+attendi 30: Coda piena: misura \d+ persa
+attendi 30: Produttore: finito, perse [1-9]\d* misure

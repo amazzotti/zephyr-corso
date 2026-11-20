@@ -1,0 +1,6 @@
+/*
+ * TODO: aggiungi l'alias "lampeggio" che punta al LED 1 (etichetta led1).
+ */
+
+/ {
+};

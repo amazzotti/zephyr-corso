@@ -1,0 +1,10 @@
+# Verifica dell'esercizio modulo6/08_watchdog
+attendi: Booting Zephyr OS
+attendi: ^Watchdog avviato \(2000 ms\)
+attendi: ^Nutro il watchdog \(1\)
+attendi: ^Nutro il watchdog \(5\)
+attendi: ^Simulo un blocco!
+# Il reset arriva circa 2 s (tempo virtuale) dopo l'ultimo nutrimento.
+attendi 30: Booting Zephyr OS
+attendi: ^Watchdog avviato \(2000 ms\)
+mai: Errore

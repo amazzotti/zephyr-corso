@@ -1,0 +1,9 @@
+# Verifica dell'esercizio modulo5/01_k_timer
+attendi: Avvio dei timer
+attendi: ^Secondo 1: scadenze=2, status=2
+attendi: ^One-shot scaduto a 15\d\d ms
+attendi: ^Secondo 2: scadenze=4, status=2
+attendi: ^Secondo 3: scadenze=6, status=2
+attendi: ^Secondo 4: scadenze=8, status=2
+attendi: ^Secondo 5: scadenze=10, status=2
+attendi: ^Timer fermato dopo 10 scadenze

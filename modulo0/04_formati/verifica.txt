@@ -1,0 +1,12 @@
+# Verifica dell'esercizio modulo0/04_formati
+attendi: Booting Zephyr OS
+attendi: ^Intero: -42$
+attendi: ^Senza segno: 3000000000$
+attendi: ^Esadecimale: 0x2a$
+attendi: ^Esadecimale 8 cifre: 0x0000002a$
+attendi: ^Carattere: Z$
+attendi: ^Testo: microcontrollore$
+attendi: ^Somma: 7 \+ 5 = 12$
+attendi: ^Versione kernel: \d+\.\d+\.\d+$
+attendi: ^Uptime: \d+ ms$
+attendi: ^Indirizzo di testo: 0x[0-9a-f]+$

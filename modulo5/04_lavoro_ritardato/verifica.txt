@@ -1,0 +1,11 @@
+# Verifica dell'esercizio modulo5/04_lavoro_ritardato
+attendi: Sorveglianza attiva: timeout 3 s
+attendi: ^Dato 1 ricevuto
+attendi: ^Dato 5 ricevuto
+attendi: ^Sensore: guasto simulato
+attendi: ^ALLARME: nessun dato da 3 s \(allarme 1\)
+attendi: ^Sensore: ripristinato
+attendi: ^Dato 8 ricevuto
+attendi: ^Sensore: spento
+attendi: ^ALLARME: nessun dato da 3 s \(allarme 2\)
+mai: allarme 3

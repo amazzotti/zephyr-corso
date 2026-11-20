@@ -1,0 +1,8 @@
+# Verifica dell'esercizio modulo3/05_stati_thread
+attendi: ^lavoratore: contatore = 2$
+attendi: ^main: sospendo lavoratore$
+attendi: ^Elenco thread:$
+attendi: lavoratore\s+prio\s+5\s+stato .*suspended
+attendi: ^main: riprendo lavoratore$
+attendi: ^lavoratore: contatore = \d+$
+mai: ^\s*\(null\)

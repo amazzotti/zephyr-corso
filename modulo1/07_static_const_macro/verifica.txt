@@ -1,0 +1,13 @@
+# Verifica dell'esercizio modulo1/07_static_const_macro
+attendi: ^chiamata 1$
+attendi: ^chiamata 2$
+attendi: ^chiamata 3$
+attendi: ^sbagliato 1$
+attendi: ^sbagliato 1$
+attendi: ^sbagliato 1$
+attendi: ^QUADRATO\(2 \+ 3\) = 11$
+attendi: ^QUADRATO_OK\(2 \+ 3\) = 25$
+attendi: ^colori: 4$
+attendi: ^MIN\(3, 7\) = 3$
+attendi: ^CLAMP\(15, 0, 10\) = 10$
+mai: sbagliato [2-9]

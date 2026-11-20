@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo7/04_errori_fatali (con PROVA 1)
+attendi: fragile: conto 1
+attendi: fragile: ora provoco un errore
+attendi: ZEPHYR FATAL ERROR 3
+attendi: HANDLER: errore 3 nel thread fragile
+attendi: main ancora vivo
+attendi: main ancora vivo

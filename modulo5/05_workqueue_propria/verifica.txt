@@ -1,0 +1,10 @@
+# Verifica dell'esercizio modulo5/05_workqueue_propria (con USA_CODA_PROPRIA 1)
+attendi: ^Coda per il lavoro lento: propria
+attendi: ^Veloce n=1: ritardo \d+ ms
+attendi: ^Lento: inizio
+attendi: ^Veloce n=2: ritardo \d+ ms
+attendi: ^Lento: fine
+attendi 30: ^Veloce n=12: ritardo \d+ ms
+attendi: ^Fine
+# Nessun lavoro veloce deve aspettare 100 ms o piu'.
+mai: ritardo \d{3,} ms

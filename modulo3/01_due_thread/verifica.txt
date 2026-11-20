@@ -1,0 +1,8 @@
+# Verifica dell'esercizio modulo3/01_due_thread
+# A stampa ogni 500 ms, B ogni 1200 ms. A: 3 arriva a 1500 ms, B: 3 a 3600 ms,
+# A: 9 a 4500 ms: l'ordine tra queste righe e' certo.
+attendi: ^main: finito$
+attendi: ^A: 3$
+attendi: ^B: 3$
+attendi: ^A: 9$
+mai: ^A: .*B:

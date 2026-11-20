@@ -1,0 +1,5 @@
+# Verifica dei test della logica (modulo8/test_logica)
+attendi 30: SUITE PASS - 100\.00% \[allarme\]
+attendi 30: SUITE PASS - 100\.00% \[filtro\]
+attendi 30: PROJECT EXECUTION SUCCESSFUL
+mai: ^\s*FAIL -

@@ -1,0 +1,16 @@
+# Cartelle di compilazione (si rigenerano con west build)
+build/
+build-*/
+
+# Log e file temporanei di Renode
+*.log
+renode-*.txt
+snapshots/
+logs/
+
+# Editor / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp

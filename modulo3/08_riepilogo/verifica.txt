@@ -1,0 +1,7 @@
+# Verifica dell'esercizio modulo3/08_riepilogo
+attendi: ^Avvio 4 thread LED$
+attendi: ^stato: L0=\d+ L1=\d+ L2=\d+ L3=\d+$
+attendi: ^L0 piu' veloce di L3: si$
+attendi: ^stato: L0=\d+ L1=\d+ L2=\d+ L3=\d+$
+mai: L3=0$
+mai: ^L0 piu' veloce di L3: no$

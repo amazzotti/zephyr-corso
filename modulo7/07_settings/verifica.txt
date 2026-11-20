@@ -1,0 +1,5 @@
+# Verifica dell'esercizio modulo7/07_settings
+attendi: Avvio n\. 1
+attendi: Periodo all'avvio = 1000 ms
+attendi: Salvo periodo = 250 ms
+attendi: Ricaricato periodo = 250 ms
