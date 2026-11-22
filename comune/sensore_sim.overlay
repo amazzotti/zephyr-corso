@@ -1,0 +1,31 @@
+/*
+ * Sensore di temperatura simulato (comune a tutti gli esercizi che lo usano).
+ *
+ * Renode non simula in modo affidabile il bus I2C dell'STM32F4, quindi il sensore lo
+ * simula Zephyr stesso: un controller I2C "emulato" (zephyr,i2c-emul-controller) a cui
+ * e' collegato un sensore di temperatura Analog Devices ADT7420 all'indirizzo 0x48.
+ *
+ * Per il codice dell'esercizio non cambia nulla rispetto a un sensore vero:
+ *   - DEVICE_DT_GET(DT_NODELABEL(sensore)) + sensor API (driver ufficiale adi,adt7420)
+ *   - I2C_DT_SPEC_GET(DT_NODELABEL(sensore)) + i2c_write_read_dt (lettura dei registri)
+ * Sulla scheda vera basterebbe spostare il nodo "sensore" sotto &i2c1.
+ *
+ * La temperatura si cambia dalla console:  sim temp 3550   (centesimi di grado: 35.50 C)
+ * Questo file viene aggiunto dal CMakeLists.txt dell'esercizio: non va modificato.
+ */
+
+/ {
+	i2c_sim: i2c@40007800 {
+		compatible = "zephyr,i2c-emul-controller";
+		reg = <0x40007800 0x400>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clock-frequency = <I2C_BITRATE_STANDARD>;
+		status = "okay";
+
+		sensore: adt7420@48 {
+			compatible = "adi,adt7420";
+			reg = <0x48>;
+		};
+	};
+};

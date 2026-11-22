@@ -21,7 +21,8 @@
  *    Ogni messaggio e' un array di MAX_RIGA char (la riga con il suo '\0').
  * 3. La callback della UART:
  *        static void uart_cb(const struct device *dev, void *user_data)
- *    - if (!uart_irq_update(dev)) return;
+ *    - uart_irq_update(dev);  (va chiamata una volta all'inizio di ogni callback: aggiorna
+ *      lo stato degli interrupt letto dalle funzioni seguenti; non restituisce nulla)
  *    - while (uart_irq_rx_ready(dev)): leggi un byte con uart_fifo_read(dev, &c, 1);
  *        * se e' '\r' o '\n' e la riga non e' vuota: chiudi con '\0' e mettila in coda
  *          con k_msgq_put(&coda_righe, riga, K_NO_WAIT), poi azzera la lunghezza;
@@ -43,8 +44,9 @@
  *     Comando sconosciuto: ciao
  *
  * CONCETTI NUOVI
- * - Interrupt della UART: la callback viene chiamata quando la FIFO di ricezione ha
- *   dati; uart_irq_update + uart_irq_rx_ready + uart_fifo_read e' lo schema standard.
+ * - Interrupt della UART: la callback viene chiamata quando c'e' un byte ricevuto
+ *   (sull'STM32: bit RXNE del registro di stato della USART2, interrupt USART2 nel
+ *   NVIC); uart_irq_update + uart_irq_rx_ready + uart_fifo_read e' lo schema standard.
  * - Il buffer di riga lo riempie l'ISR; il thread riceve solo righe COMPLETE tramite
  *   una k_msgq (messaggi di dimensione fissa, copiati: nessun problema di condivisione).
  * - strcmp (in <string.h>): confronto tra stringhe C. 0 = uguali.

@@ -23,7 +23,7 @@ try {
     $app = Get-CartellaEsercizio $Esercizio
     if (-not $NoBuild) { Invoke-Compilazione $app -Pulito:$Pulito }
 
-    $extra = @('showAnalyzer sysbus.uart0')
+    $extra = @("showAnalyzer $script:UartConsole")
     if (-not $Pausa) { $extra += 'start' }
     $resc = New-ScriptRenode $app 'esegui.resc' $extra
 

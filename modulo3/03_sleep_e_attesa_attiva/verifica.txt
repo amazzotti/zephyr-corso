@@ -1,5 +1,5 @@
 # Verifica dell'esercizio modulo3/03_sleep_e_attesa_attiva
-attendi: ^Cicli al secondo: 32768$
+attendi: ^Cicli al secondo: 168000000$
 attendi: ^sleep: \d+ ms, \d+ cicli, sfondo avanzato di [1-9]\d* giri$
 attendi: ^busy_wait: \d+ ms, \d+ cicli, sfondo avanzato di 0 giri$
 attendi: ^sleep: .* di [1-9]\d* giri$

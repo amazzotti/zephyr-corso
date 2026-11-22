@@ -202,9 +202,12 @@ compilazione west stampa:
 
 ```
 Memory region   Used Size  Region Size  %age Used
-        FLASH:     18264 B         1 MB      1.74%
-          RAM:      6544 B       256 KB      2.50%
+        FLASH:     21720 B         1 MB      2.07%
+          RAM:      5120 B       128 KB      3.91%
 ```
+
+(Sulla STM32F4 Discovery: 1 MB di flash da `0x08000000` e 128 KB di RAM principale da
+`0x20000000`; i 64 KB di RAM CCM a `0x10000000` Zephyr non li usa se non glielo chiedi.)
 
 Per sapere **chi** occupa cosa:
 
@@ -228,7 +231,8 @@ o, se la protezione è attiva, provoca un errore fatale (motivo 2).
 La **flash** è diversa dalla RAM:
 - si **legge** come la RAM;
 - si **scrive** solo trasformando bit da 1 a 0;
-- per riportare i bit a 1 si **cancella** un'intera pagina (sul nRF52840: 4 KB) alla volta;
+- per riportare i bit a 1 si **cancella** un'intera pagina, o *settore*, alla volta (sullo
+  STM32F407 i settori sono grandi e diversi: 4 da 16 KB, 1 da 64 KB, 7 da 128 KB);
 - ogni pagina sopporta un numero limitato di cancellazioni (10.000 circa).
 
 Per questo non si salva "una variabile in flash" direttamente: si usa un file system a
@@ -256,12 +260,13 @@ static int nodo_set(const char *nome, size_t len, settings_read_cb leggi, void *
 SETTINGS_STATIC_HANDLER_DEFINE(nodo, "nodo", NULL, nodo_set, NULL, NULL);
 ```
 
-**In Renode:** la piattaforma nRF52840 non simula il controller della flash (NVMC), quindi
-la flash vera non si può cancellare né scrivere come sulla scheda. Usiamo il **flash
-simulator** di Zephyr: un "finto chip di flash" che vive in RAM, dichiarato nel devicetree
-(`app.overlay`). Il codice dell'applicazione è **identico** a quello per la flash vera (cambia
-solo l'overlay); il limite è che i dati si perdono con `machine Reset`, perché la RAM viene
-reinizializzata.
+**Nel corso:** il devicetree della `stm32f4_disco` non prevede una partizione per i dati e i
+settori dello STM32F407 sono grandi (fino a 128 KB), scomodi per un esercizio. Usiamo il
+**flash simulator** di Zephyr: un "finto chip di flash" da 32 KB con pagine da 4 KB che vive
+in RAM, dichiarato nel devicetree (`app.overlay`). Il codice dell'applicazione è
+**identico** a quello per la flash vera (cambia solo l'overlay); il limite è che i dati si
+perdono con `machine Reset`, perché la RAM viene reinizializzata. Sulla scheda vera si
+definirebbe una partizione in un settore libero della flash (per esempio l'ultimo).
 
 ## 8. Riassunto: quale strumento per quale problema
 

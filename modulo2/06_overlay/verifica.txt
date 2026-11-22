@@ -1,7 +1,7 @@
 # Verifica dell'esercizio modulo2/06_overlay
-# (Si controlla solo led2: lo stato dei LED su pin mai configurati dipende dal simulatore.)
 attendi: ^Nodo: nodo-01$
 attendi: ^Soglia: 30$
 attendi: ^Allarme acceso$
 pausa: 200
-controlla: sysbus.gpio0.led2 State => True
+controlla: sysbus.gpioPortD.led2 State => True
+controlla: sysbus.gpioPortD.led3 State => False

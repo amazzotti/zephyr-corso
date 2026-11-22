@@ -11,8 +11,9 @@
  * PASSI
  * 1. Prendi il device della console:
  *        static const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
- *    e controlla device_is_ready(uart). E' la stessa UART usata da printk: la parte
- *    che trasmette (TX) la usano tutti e due, la parte che riceve (RX) solo tu.
+ *    e controlla device_is_ready(uart). E' la USART2 dell'STM32 (pin PA2 = TX,
+ *    PA3 = RX), la stessa usata da printk: la parte che trasmette (TX) la usano tutti
+ *    e due, la parte che riceve (RX) solo tu.
  * 2. Stampa "Scrivi una riga e premi Invio".
  * 3. Prepara un buffer di riga:
  *        #define MAX_RIGA 64

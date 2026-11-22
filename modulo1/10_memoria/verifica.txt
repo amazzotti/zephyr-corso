@@ -1,11 +1,11 @@
 # Verifica dell'esercizio modulo1/10_memoria
-# Flash: 0x00000000 - 0x000fffff     RAM: 0x20000000 - 0x2003ffff
-attendi: ^main\s+0x000[0-9a-f]{5} FLASH$
-attendi: ^stringa\s+0x000[0-9a-f]{5} FLASH$
-attendi: ^costante\s+0x000[0-9a-f]{5} FLASH$
-attendi: ^globale_init\s+0x200[0-3][0-9a-f]{4} RAM$
-attendi: ^globale_zero\s+0x200[0-3][0-9a-f]{4} RAM$
-attendi: ^statica_init\s+0x200[0-3][0-9a-f]{4} RAM$
-attendi: ^statica_locale\s+0x200[0-3][0-9a-f]{4} RAM$
-attendi: ^locale\s+0x200[0-3][0-9a-f]{4} RAM$
+# Flash: 0x08000000 - 0x080fffff     RAM: 0x20000000 - 0x2001ffff
+attendi: ^main\s+0x080[0-9a-f]{5} FLASH$
+attendi: ^stringa\s+0x080[0-9a-f]{5} FLASH$
+attendi: ^costante\s+0x080[0-9a-f]{5} FLASH$
+attendi: ^globale_init\s+0x200[01][0-9a-f]{4} RAM$
+attendi: ^globale_zero\s+0x200[01][0-9a-f]{4} RAM$
+attendi: ^statica_init\s+0x200[01][0-9a-f]{4} RAM$
+attendi: ^statica_locale\s+0x200[01][0-9a-f]{4} RAM$
+attendi: ^locale\s+0x200[01][0-9a-f]{4} RAM$
 attendi: ^globale_zero vale 0$

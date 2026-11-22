@@ -11,9 +11,20 @@ scrivi perché (servirà nella relazione).
 
 ## 1. Descrizione in una frase
 
-Il nodo legge la temperatura da un sensore BME280, ne calcola la media mobile e segnala con
-un LED quando supera una soglia configurabile; l'operatore conferma l'allarme con un
+Il nodo legge la temperatura da un sensore ADT7420 (I2C), ne calcola la media mobile e
+segnala con un LED quando supera una soglia configurabile; l'operatore conferma l'allarme con un
 pulsante e configura il nodo dalla shell.
+
+**Hardware** (STM32F4 Discovery simulata in Renode, `progetto/app.overlay`):
+
+| Ruolo | Componente | Alias nel devicetree |
+|---|---|---|
+| Sensore di temperatura | ADT7420 su I2C, indirizzo `0x48` (emulato da Zephyr, `comune/`) | nodo `sensore` |
+| LED di allarme | LED rosso, PD14 | `led_allarme` |
+| LED di battito | LED verde, PD12 | `led_battito` |
+| Pulsante di conferma | pulsante blu, PA0 (attivo alto, interrupt EXTI0) | `pulsante_conferma` |
+| Watchdog | IWDG | `watchdog0` |
+| Console e shell | USART2 | `zephyr,console` |
 
 ## 2. Requisiti
 
@@ -21,13 +32,13 @@ pulsante e configura il nodo dalla shell.
 
 | Id | Requisito | Passo |
 |---|---|---|
-| R1 | Il nodo legge la temperatura dal BME280 ogni 1 s. | 2 |
+| R1 | Il nodo legge la temperatura dal sensore (ADT7420, sensor API) ogni 1 s. | 2 |
 | R2 | Ogni misura (tempo, temperatura in centesimi di °C, esito) passa all'elaborazione tramite una coda. | 2 |
 | R3 | L'elaborazione calcola la media mobile delle ultime 5 misure valide. | 3 |
-| R4 | Se la media è ≥ soglia (predefinita 30.00 °C) l'allarme si attiva e LED0 si accende. | 3 |
-| R5 | L'allarme rientra quando la media scende sotto soglia − isteresi (predefinita 1.00 °C); LED0 si spegne. | 3 |
-| R6 | Premendo SW0 con allarme attivo l'allarme passa a "confermato" e LED0 si spegne; il pulsante è campionato ogni 10 ms con un debounce di 50 ms. | 4 |
-| R7 | LED1 lampeggia (battito, 500 ms acceso / 500 ms spento) finché il sistema è vivo. | 4 |
+| R4 | Se la media è ≥ soglia (predefinita 30.00 °C) l'allarme si attiva e il LED rosso (allarme) si accende. | 3 |
+| R5 | L'allarme rientra quando la media scende sotto soglia − isteresi (predefinita 1.00 °C); il LED rosso si spegne. | 3 |
+| R6 | Premendo il pulsante blu (SW0) con allarme attivo l'allarme passa a "confermato" e il LED rosso si spegne; il pulsante è gestito a interrupt con un debounce di 50 ms. | 4 |
+| R7 | Il LED verde lampeggia (battito, 500 ms acceso / 500 ms spento) finché il sistema è vivo. | 4 |
 | R8 | Dalla shell: `stato`, `soglia get`, `soglia set <°C>`, `storico`. | 5 |
 | R9 | La soglia impostata viene salvata e ricaricata all'avvio. | 5 |
 | R10 | Dopo 3 letture fallite consecutive il nodo segnala `ERRORE SENSORE`; alla prima lettura buona `SENSORE OK`. | 6 |
@@ -51,7 +62,7 @@ Completa la tabella (teoria, sezioni 2 e 3). Una riga per attività.
 |---|---|---|---|---|---|
 | Acquisizione | thread | ... | 1 s | 1024 | ... |
 | Elaborazione | ... | ... | arrivo di una misura | ... | ... |
-| Pulsante | ISR + ... | – | pressione | – | ... |
+| Pulsante | ISR (EXTI) + ... | – | pressione | – | ... |
 | Battito | ... | ... | 500 ms | ... | ... |
 | Shell | thread (di Zephyr) | – | comando | – | – |
 | Watchdog | ... | ... | ... | ... | ... |
@@ -80,11 +91,11 @@ Disegna (ASCII, o un'immagine nella cartella) thread, code e periferiche, con le
 dati. Esempio di partenza da completare:
 
 ```
- BME280 --I2C--> [Acquisizione] --msgq--> [Elaborazione] --> LED0 (allarme)
+ ADT7420 --I2C--> [Acquisizione] --msgq--> [Elaborazione] --> LED rosso (allarme)
                                                ^      |
-                         SW0 --ISR--> ... -----+      +--> storico
+                          SW0 --ISR--> ... -----+      +--> storico
                                                        
- [Shell] <-- comandi --> ...                LED1 (battito) <-- ...
+ [Shell] <-- comandi --> ...                LED verde (battito) <-- ...
 ```
 
 ## 6. Macchina a stati dell'allarme
@@ -93,7 +104,7 @@ Completa stati e transizioni (teoria, sezione 5):
 
 | Stato attuale | Evento | Nuovo stato | Azione |
 |---|---|---|---|
-| NO | media ≥ soglia | ATTIVO | LED0 acceso, stampa `ALLARME ATTIVO ...` |
+| NO | media ≥ soglia | ATTIVO | LED rosso acceso, stampa `ALLARME ATTIVO ...` |
 | ATTIVO | pulsante | ... | ... |
 | ATTIVO | media < soglia − isteresi | ... | ... |
 | CONFERMATO | ... | ... | ... |

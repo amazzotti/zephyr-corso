@@ -26,7 +26,7 @@
  * OUTPUT ATTESO
  *     *** Booting Zephyr OS build v4.x.x ***
  *     Ciao, Zephyr!
- *     Scheda: nrf52840dk
+ *     Scheda: stm32f4_disco
  *
  * CONCETTI NUOVI
  * - #include: inserisce le dichiarazioni di una libreria (qui il kernel e printk).

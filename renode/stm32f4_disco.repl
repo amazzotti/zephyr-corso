@@ -1,0 +1,51 @@
+// Scheda STM32F4 Discovery simulata per il corso.
+//
+// Parte dalla piattaforma STM32F4 di Renode (CPU Cortex-M4F, GPIO A-F con EXTI, USART,
+// I2C, timer, watchdog IWDG, RNG, controller della flash...) e aggiunge cio' che sta
+// sulla scheda vera, piu' qualche componente per gli esercizi:
+//   - 4 LED  su PD12 (verde), PD13 (arancione), PD14 (rosso), PD15 (blu),
+//     accesi quando il pin e' a 1 (attivi alti)
+//   - pulsante utente (blu) su PA0: pin a 1 quando premuto (attivo alto)
+//   - in piu' (non ci sono sulla Discovery): 3 pulsanti su PE7, PE8, PE9, attivi alti
+//
+// Il sensore di temperatura NON e' qui: lo emula Zephyr dentro il firmware (cartella
+// comune/), perche' il modello I2C dell'STM32F4 in Renode non e' affidabile.
+//
+// Nomi da usare nel monitor di Renode:
+//   sysbus.gpioPortD.led0 ... led3    ->  State            (True = acceso)
+//   sysbus.gpioPortA.sw0              ->  Press / Release / Pressed
+//   sysbus.gpioPortE.sw1 ... sw3      ->  Press / Release / Pressed
+//
+// Corrispondenza con il devicetree di Zephyr (board stm32f4_disco):
+// led0 = verde PD12, led1 = arancione PD13, led2 = rosso PD14, led3 = blu PD15,
+// sw0 = PA0. sw1..sw3 non esistono nel devicetree della scheda: gli esercizi che li usano
+// li aggiungono con un overlay (nodo gpio-keys).
+
+using "platforms/cpus/stm32f4.repl"
+
+led0: Miscellaneous.LED @ gpioPortD 12
+
+led1: Miscellaneous.LED @ gpioPortD 13
+
+led2: Miscellaneous.LED @ gpioPortD 14
+
+led3: Miscellaneous.LED @ gpioPortD 15
+
+gpioPortD:
+    12 -> led0@0
+    13 -> led1@0
+    14 -> led2@0
+    15 -> led3@0
+
+sw0: Miscellaneous.Button @ gpioPortA 0
+    -> gpioPortA@0
+
+sw1: Miscellaneous.Button @ gpioPortE 7
+    -> gpioPortE@7
+
+sw2: Miscellaneous.Button @ gpioPortE 8
+    -> gpioPortE@8
+
+sw3: Miscellaneous.Button @ gpioPortE 9
+    -> gpioPortE@9
+

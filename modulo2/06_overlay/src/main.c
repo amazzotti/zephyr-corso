@@ -5,7 +5,7 @@
  *
  * OBIETTIVO
  * Modificare il devicetree della scheda SENZA toccare i file di Zephyr, con un file
- * app.overlay: aggiungere un alias "allarme" che punta al LED 2 e dei parametri
+ * app.overlay: aggiungere un alias "allarme" che punta al LED rosso e dei parametri
  * dell'applicazione nel nodo zephyr,user. Poi leggerli dal codice.
  *
  * PASSI
@@ -18,10 +18,11 @@
  * 4. Crea una gpio_dt_spec per l'alias allarme (come nel blinky, ma con
  *    DT_ALIAS(allarme)), configurala come uscita spenta, accendila e stampa
  *    "Allarme acceso". Poi termina main (il LED resta acceso).
- * 5. In Renode controlla: sysbus.gpio0.led2 State deve valere True.
- * 6. Prova: cambia nell'overlay l'alias in &led3 e ricompila. Senza toccare il .c,
- *    ora si accende il LED 3. Questo e' il punto dei devicetree: il codice non sa
- *    su quale pin e' l'allarme. Rimetti &led2 prima della verifica.
+ * 5. In Renode controlla: sysbus.gpioPortD.led2 State (LED rosso, PD14) deve valere
+ *    True, e sysbus.gpioPortD.led3 State (LED blu) False.
+ * 6. Prova: cambia nell'overlay l'alias in &blue_led_6 e ricompila. Senza toccare il
+ *    .c, ora si accende il LED blu. Questo e' il punto dei devicetree: il codice non sa
+ *    su quale pin e' l'allarme. Rimetti &red_led_5 prima della verifica.
  * 7. Lancia la verifica.
  *
  * OUTPUT ATTESO
@@ -31,7 +32,10 @@
  *
  * CONCETTI NUOVI
  * - app.overlay: modifiche al devicetree della board limitate a questa applicazione.
- * - aliases: un nome tuo per un nodo esistente (&led2 = riferimento all'etichetta led2).
+ * - aliases: un nome tuo per un nodo esistente (&red_led_5 = riferimento all'etichetta
+ *   red_led_5, cioe' al nodo led_5 del LED rosso). Un'etichetta (label:) e un alias
+ *   sono cose diverse: led2 e' un ALIAS della scheda, non un'etichetta, quindi &led2
+ *   qui darebbe errore.
  * - zephyr,user: nodo libero per i parametri dell'applicazione.
  * - "nome-nodo" nel devicetree diventa nome_nodo nelle macro; "zephyr,user" diventa
  *   zephyr_user.
@@ -46,9 +50,11 @@
  * - Modifiche all'overlay non viste: ricompila con -Pulito.
  * - Usare DT_ALIAS(allarme) senza aver aggiunto l'alias: errore lungo con
  *   "DT_N_ALIAS_allarme".
+ * - Scrivere allarme = &led2;  : led2 non e' un'etichetta, il dtc risponde con
+ *   "Reference to non-existent node or label".
  *
  * BONUS (facoltativo)
- * - Nell'overlay cambia la velocita' della console:  &uart0 { current-speed = <9600>; };
+ * - Nell'overlay cambia la velocita' della console:  &usart2 { current-speed = <9600>; };
  *   e stampala come nell'esercizio 4. (In Renode la UART funziona a qualunque
  *   velocita'; su una scheda vera il terminale del PC andrebbe impostato uguale.)
  * - Aggiungi a zephyr,user una proprieta' con un array:  limiti = <10 20 30>;

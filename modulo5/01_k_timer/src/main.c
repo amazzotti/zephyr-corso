@@ -35,7 +35,7 @@
  * - K_TIMER_DEFINE(nome, funzione_scadenza, funzione_stop): un timer statico.
  * - k_timer_start(&t, prima_scadenza, periodo); periodo K_NO_WAIT = one-shot.
  * - La funzione di scadenza gira in CONTESTO DI INTERRUPT (la chiama la ISR del timer
- *   di sistema, RTC1 sul nRF52840): deve essere brevissima e non puo' bloccarsi.
+ *   di sistema, il SysTick della CPU): deve essere brevissima e non puo' bloccarsi.
  *   Lo approfondirai nell'esercizio 2.
  * - k_timer_status_get: quante scadenze dall'ultima chiamata (e azzera il conteggio).
  * - Perche' la prima scadenza a 250 ms e non a 500? Cosi' le scadenze (250, 750, 1250...)

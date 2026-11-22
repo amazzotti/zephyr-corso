@@ -31,7 +31,7 @@ risultato: 6   (dovrebbe essere 7)
 ```
 
 Si chiama **race condition**: due thread "corrono" sulla stessa risorsa e vince chi arriva
-ultimo. Su un microcontrollore a un solo core (come il nRF52840) succede quando un thread viene
+ultimo. Su un microcontrollore a un solo core (come lo STM32F407 della nostra scheda) succede quando un thread viene
 interrotto (*preemption*, interrupt, time slicing) proprio in mezzo alla sequenza. È raro,
 quindi negli esercizi lo **forziamo** con un `k_yield()` tra lettura e scrittura.
 

@@ -12,8 +12,9 @@ Si aggiorna alla fine di ogni sessione (sezione 7).
 - Imparo a programmare firmware con **Zephyr RTOS**: linguaggio C per l'embedded, kernel
   (thread, sincronizzazione, tempo), build system (CMake, Kconfig, devicetree), driver e
   periferiche, strumenti (shell, log, test, debug).
-- **Nessun hardware**: tutto gira su una scheda **nRF52840 DK simulata con Renode**.
-  Il firmware è lo stesso che andrebbe sulla scheda vera.
+- **Nessun hardware**: tutto gira su una scheda **STM32F4 Discovery simulata con Renode**
+  (microcontrollore STM32F407, la famiglia più diffusa nell'industria). Il firmware è lo
+  stesso che andrebbe sulla scheda vera.
 - Arrivare a un **progetto completo** costruito da me: un nodo di monitoraggio della
   temperatura (sensore I2C, thread, code di messaggi, allarme con LED e pulsante, shell,
   configurazione salvata, watchdog, test automatici).
@@ -48,8 +49,9 @@ Si aggiorna alla fine di ogni sessione (sezione 7).
 | Workspace Zephyr (sorgenti, moduli, ambiente Python) | `C:\zephyrproject` (fuori dal repo: pesa diversi GB) |
 | Zephyr SDK (compilatore `arm-zephyr-eabi`) | installato con `west sdk install` |
 | Simulatore | Renode, installato da https://github.com/renode/renode/releases |
-| Scheda | `nrf52840dk/nrf52840` (nRF52840 DK, Cortex-M4F, 1 MB flash, 256 KB RAM) |
-| Scheda simulata | [renode/nrf52840dk.repl](renode/nrf52840dk.repl): CPU + 4 LED + 4 pulsanti + sensore BME280 su I2C |
+| Scheda | `stm32f4_disco` (STM32F4 Discovery, STM32F407VG, Cortex-M4F a 168 MHz, 1 MB flash da `0x08000000`, 128 KB RAM da `0x20000000` + 64 KB CCM da `0x10000000`) |
+| Scheda simulata | [renode/stm32f4_disco.repl](renode/stm32f4_disco.repl): CPU + 4 LED + pulsante utente + 3 pulsanti extra |
+| Sensore di temperatura | ADT7420 su I2C **emulato da Zephyr** dentro il firmware: [comune/](comune/) (vedi sotto) |
 | Editor | VS Code con estensioni C/C++ e CMake |
 
 Comandi (da PowerShell, nella cartella del repo):
@@ -63,30 +65,77 @@ Comandi (da PowerShell, nella cartella del repo):
 
 Dettagli del setup: Modulo 0 e [teoria/01_setup_toolchain.md](teoria/01_setup_toolchain.md).
 
+### La scheda simulata (dati verificati il 20/11/2026 con Renode 1.16.0 e Zephyr 4.5.0)
+
+| Cosa | Pin / nome nel devicetree | Nome nel monitor di Renode | Note |
+|---|---|---|---|
+| Console (printk, log, shell) | `usart2` (PA2/PA3, 115200) | `sysbus.usart2` | anche la ricezione a interrupt funziona |
+| LED verde / arancione / rosso / blu | `led0` PD12, `led1` PD13, `led2` PD14, `led3` PD15 | `sysbus.gpioPortD.led0` ... `led3`, comando `State` | attivi alti; spenti all'avvio |
+| Pulsante utente | `sw0` PA0 | `sysbus.gpioPortA.sw0`, comandi `Press` / `Release` / `Pressed` | attivo alto (premuto = pin a 1); **interrupt GPIO (EXTI) funzionanti** |
+| Pulsanti extra | PE7, PE8, PE9 (non nel devicetree: si aggiungono con un overlay `gpio-keys`, alias `sw1`..`sw3`) | `sysbus.gpioPortE.sw1` ... `sw3` | attivi alti, `GPIO_PULL_DOWN` nell'overlay |
+| Watchdog indipendente | `iwdg` (da attivare con overlay: `&iwdg { status = "okay"; };` e alias `watchdog0 = &iwdg;`) | `sysbus.iwdg` | allo scadere la scheda si resetta e il firmware riparte |
+| Registri GPIOD | RCC `AHB1ENR` `0x40023830` (bit 3 = clock GPIOD), `MODER` `0x40020C00`, `IDR` `0x40020C10`, `ODR` `0x40020C14`, `BSRR` `0x40020C18` | `sysbus ReadDoubleWord 0x40020C14` | scrivendo nei registri il LED cambia davvero |
+| ID del chip | `DBGMCU_IDCODE` a `0xE0042000` | | in Renode vale `0x10006411` |
+
+Il pulsante extra si aggiunge così (overlay già verificato):
+
+```dts
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+/ {
+	pulsanti_extra {
+		compatible = "gpio-keys";
+		pulsante_1: pulsante_1 {
+			gpios = <&gpioe 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+			zephyr,code = <INPUT_KEY_1>;
+		};
+	};
+	aliases { sw1 = &pulsante_1; };
+};
+```
+
+### Il sensore di temperatura simulato (`comune/`)
+
+Il modello I2C dell'STM32F4 in Renode non è affidabile (dopo la prima transazione i dati
+si disallineano), quindi il sensore lo simula **Zephyr stesso**: un controller I2C emulato
+con un sensore **ADT7420** (Analog Devices) all'indirizzo `0x48`. Per il codice degli
+esercizi è un sensore I2C vero:
+
+- con la **sensor API** e il driver ufficiale: `DEVICE_DT_GET(DT_NODELABEL(sensore))`,
+  `sensor_sample_fetch`, `sensor_channel_get(..., SENSOR_CHAN_AMBIENT_TEMP, ...)`;
+- leggendo i **registri**: `I2C_DT_SPEC_GET(DT_NODELABEL(sensore))` + `i2c_write_read_dt`
+  (repeated start). Registri: `0x00`/`0x01` temperatura (MSB/LSB, 13 bit nei bit 15..3,
+  0,0625 °C per unità, con segno), `0x02` stato, `0x03` configurazione, `0x0B` ID = `0xCB`.
+
+La temperatura parte da **22,50 °C** e si cambia scrivendo nella console
+**`sim temp 3550`** (centesimi di grado → 35,50 °C); `sim temp` da solo mostra il valore.
+Un esercizio che usa il sensore lo attiva nel suo `CMakeLists.txt`:
+
+```cmake
+cmake_minimum_required(VERSION 3.20.0)
+include(${CMAKE_CURRENT_LIST_DIR}/../../comune/sensore_sim.cmake)   # prima di find_package
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(nome)
+target_sources(app PRIVATE src/main.c ${SENSORE_SIM_SORGENTE})
+```
+
+Il modulo comune attiva anche la shell (per il comando `sim`): per questo nella console
+le righe possono iniziare con il prompt `uart:~$ `.
+
 ### Limiti noti della simulazione (da tenere presenti)
 
-- La piattaforma Renode `nrf52840` **non** modella NVMC (controller della flash), SAADC
-  (convertitore analogico) e PWM. Per questo il corso non usa ADC e PWM, e per salvare dati
-  in flash (Modulo 7) usa il **flash simulator** di Zephyr, che vive in RAM: le API sono
-  quelle vere, ma i dati non sopravvivono a un reset completo.
-- Il modello I2C di Renode **non gestisce il repeated start**: `i2c_write_read`,
-  `i2c_reg_read_byte`, `i2c_burst_read` (e le versioni `_dt`) restituiscono 0 ma con dati
-  sbagliati. Funzionano invece due transazioni separate, `i2c_write` + `i2c_read`. Per
-  questo il driver ufficiale di Zephyr per il BME280 (sensor API) in Renode non si
-  inizializza, e nel corso il driver del sensore lo scrivi tu (Modulo 6, esercizio 7).
-  Dettagli: [teoria/07_periferiche_driver.md](teoria/07_periferiche_driver.md), sezione 7.
-- Gli **interrupt GPIO non scattano** (Renode 1.16 + Zephyr 4.5): la configurazione con
-  `gpio_pin_interrupt_configure_dt` riesce, ma la callback non viene mai chiamata, né sul
-  fronte né a livello. Leggere il pin (`gpio_pin_get_dt`) invece funziona: per questo nel
-  corso i pulsanti si **campionano con un `k_timer`** (ogni 10 ms, con debounce). Gli
-  interrupt della UART e dei timer funzionano normalmente. Dettagli:
-  [teoria/07_periferiche_driver.md](teoria/07_periferiche_driver.md), sezione 4.
-- Nei pulsanti simulati non c'è il rimbalzo meccanico: lo si simula a mano (Modulo 6).
-- Un LED che il firmware **non ha mai configurato** in Renode risulta acceso (`State` =
-  `True`): il pin parte da 0 e i LED della DK si accendono con il pin a 0. Sulla scheda vera
-  resterebbe spento. Le verifiche controllano solo LED configurati dal firmware.
+- Il bus **I2C** reale dell'STM32F4 in Renode non funziona bene: il sensore è emulato da
+  Zephyr (vedi sopra). Si impara lo stesso tutto il lato software dell'I2C (indirizzi,
+  registri, repeated start, driver, sensor API); manca solo la periferica I2C a livello di
+  registri.
+- La piattaforma non modella **ADC** e **PWM** in modo utilizzabile: il corso non li usa
+  (all'avvio può comparire un avviso `adc_stm32: VREFINT measure failed`: si ignora).
+- Per salvare dati in flash (Modulo 7) si usa il **flash simulator** di Zephyr, che vive in
+  RAM: le API sono quelle vere, ma i dati non sopravvivono a un reset completo.
+- Nei pulsanti simulati non c'è il rimbalzo meccanico: lo si simula a mano con pressioni
+  rapide dal monitor (Modulo 6).
 - I tempi in Renode sono tempi *virtuali*: la misura di prestazioni assolute non ha senso,
   quella di tempi relativi e dell'ordine degli eventi sì.
+- L'ID univoco del chip (`UID`, `0x1FFF7A10`) in Renode vale 0.
 
 ## 4. Piano completo dei moduli
 
@@ -118,10 +167,9 @@ Dettagli del setup: Modulo 0 e [teoria/01_setup_toolchain.md](teoria/01_setup_to
   lavoro ritardato (`k_work_delayable`), timeout, jitter.
 
 ### Modulo 6 — Periferiche e driver
-- GPIO in ingresso (polling, campionamento con timer; interrupt GPIO come concetto per la
-  scheda vera), debounce, UART in polling e a interrupt, I2C
-  "grezzo" (lettura di registri), un driver del BME280 scritto da me (con la formula di
-  compensazione del datasheet; la sensor API di Zephyr come concetto), watchdog.
+- GPIO in ingresso (polling e **interrupt** con EXTI), debounce (interrupt + lavoro
+  ritardato), UART in polling e a interrupt, I2C "grezzo" (lettura dei registri del sensore
+  ADT7420), sensor API con il driver ufficiale, watchdog (IWDG).
 
 ### Modulo 7 — Strumenti da professionista
 - Shell (comandi di sistema e comandi propri), `ztest`, errori fatali e `__ASSERT`, debug con
@@ -143,6 +191,7 @@ zephyr-corso/
   verifica.ps1        compila, esegue e controlla l'output di un esercizio
   strumenti/          funzioni comuni degli script
   renode/             scheda simulata (.repl) e script di avvio (.resc)
+  comune/             sensore di temperatura simulato, usato dagli esercizi con il sensore
   teoria/             appunti, un file per modulo
   modulo0/ ... modulo8/
      NN_nome/         un esercizio = una applicazione Zephyr
@@ -185,20 +234,16 @@ zephyr-corso/
   | `attendi 30: REGEX` | come sopra con timeout di 30 secondi |
   | `mai: REGEX` | alla fine, controlla che nessuna riga ricevuta corrisponda |
   | `scrivi: testo` | scrive una riga sulla UART (come se la digitassi) |
-  | `monitor: comando` | esegue un comando nel monitor di Renode (es. `sysbus.gpio0.sw0 Press`) |
-  | `controlla: comando => testo` | esegue il comando nel monitor e controlla che la risposta contenga il testo (es. `sysbus.gpio0.led0 State => True`) |
+  | `monitor: comando` | esegue un comando nel monitor di Renode (es. `sysbus.gpioPortA.sw0 Press`) |
+  | `controlla: comando => testo` | esegue il comando nel monitor e controlla che la risposta contenga il testo (es. `sysbus.gpioPortD.led0 State => True`) |
   | `pausa: 500` | aspetta 500 ms (tempo reale) |
 
   Le regex sono quelle di .NET e non distinguono maiuscole e minuscole. Per i caratteri
   speciali (`( ) [ ] . * + ?`) usare `\`.
 
-- Nomi nella scheda simulata: UART della console `sysbus.uart0`, LED `sysbus.gpio0.led0..led3`
-  (pin 13-16, `State` vale `True` se acceso), pulsanti `sysbus.gpio0.sw0..sw3`
-  (pin 11, 12, 24, 25; comandi `Press` e `Release`), sensore `sysbus.twi0.bme280`
-  (indirizzo I2C `0x76`, nel devicetree Zephyr il bus è `i2c0`; proprietà `Temperature`,
-  `Humidity`, `Pressure`, per esempio `sysbus.twi0.bme280 Temperature 35.5`; all'avvio
-  22.5 °C, impostati da `renode/esercizio.resc`). Sul bus I2C usare solo `i2c_write` +
-  `i2c_read` (niente repeated start, vedi i limiti nella sezione 3).
+- Nomi nella scheda simulata e sensore: vedi la sezione 3. Negli esercizi con la shell o
+  con il sensore simulato le righe della console possono iniziare con `uart:~$ `: nelle
+  regex di `verifica.txt` non usare `^` per quelle righe.
 
 ## 6b. Teoria
 
@@ -244,7 +289,8 @@ la consegna e si scrive il codice sotto.
 - [ ] `modulo0/02_hello` — **Ciao, Zephyr!** Primo firmware: stampare un saluto con `printk`.
   Concetti: `main`, `printk`, compilare con west, aprire in Renode, banner di avvio.
 - [ ] `modulo0/03_esplora_renode.md` — **Il monitor di Renode.** Comandi `peripherals`,
-  `pause`/`start`, leggere lo stato dei LED, premere un pulsante, `sysbus ReadDoubleWord`.
+  `pause`/`start`, leggere lo stato dei LED, premere il pulsante utente, la tabella dei
+  vettori a `0x08000000` e altri registri con `sysbus ReadDoubleWord`.
 - [ ] `modulo0/04_formati` — **printk e i formati.** `%d %u %x %s %c %p`, versione del kernel,
   tempo dall'avvio. Concetti: specificatori di formato, `k_uptime_get`.
 - [ ] `modulo0/05_ciclo_infinito` — **Un firmware non finisce mai.** Contatore stampato ogni
@@ -268,11 +314,14 @@ la consegna e si scrive il codice sotto.
   file, `const`, `#define` e le sue trappole, `ARRAY_SIZE`.
 - [ ] `modulo1/08_file_multipli` — **Più file.** `statistiche.c/.h`, header guard, `extern`,
   aggiungere sorgenti in `CMakeLists.txt`.
-- [ ] `modulo1/09_registri` — **volatile e registri.** Leggere l'ID del chip dal registro FICR e
-  accendere un LED scrivendo direttamente nei registri GPIO. Concetti: memory-mapped I/O.
+- [ ] `modulo1/09_registri` — **volatile e registri.** Leggere l'ID del chip
+  (`DBGMCU_IDCODE`), accendere il clock di GPIOD in `RCC_AHB1ENR`, mettere PD15 in uscita con
+  `MODER` e accendere/spegnere il LED blu con `BSRR`, rileggendo `ODR`. Concetti:
+  memory-mapped I/O, clock gating, campi di bit, registri set/reset.
 - [ ] `modulo1/10_memoria` — **Dove vivono codice e variabili.** Stampare gli indirizzi di
-  funzioni, costanti, globali, `static`, locali: flash contro RAM, sezioni `.text`, `.rodata`,
-  `.data`, `.bss`, stack; confronto con `build/zephyr/zephyr.map`.
+  funzioni, costanti, globali, `static`, locali: flash (`0x08000000`) contro RAM
+  (`0x20000000`), sezioni `.text`, `.rodata`, `.data`, `.bss`, stack; confronto con
+  `build/zephyr/zephyr.map`.
 - [ ] `modulo1/11_buffer_circolare` — **Riepilogo: buffer circolare.** Struct + funzioni +
   puntatori: `rb_push`, `rb_pop`, pieno/vuoto, con test fatti a mano.
 
@@ -286,8 +335,8 @@ la consegna e si scrive il codice sotto.
   `LOG_HEXDUMP_INF`, differenza tra `printk` e log.
 - [ ] `modulo2/04_devicetree_lettura` — **Leggere il devicetree.** Trovare nodi in
   `build/zephyr/zephyr.dts`, macro `DT_ALIAS`, `DT_CHOSEN`, `DT_PROP`, `DT_REG_ADDR`.
-- [ ] `modulo2/05_blinky` — **Il primo LED.** `GPIO_DT_SPEC_GET`, `gpio_is_ready_dt`,
-  `gpio_pin_configure_dt`, `gpio_pin_toggle_dt`.
+- [ ] `modulo2/05_blinky` — **Il primo LED.** LED verde (PD12): `CONFIG_GPIO=y`,
+  `GPIO_DT_SPEC_GET`, `gpio_is_ready_dt`, `gpio_pin_configure_dt`, `gpio_pin_toggle_dt`.
 - [ ] `modulo2/06_overlay` — **Overlay.** `app.overlay` con un alias proprio e il nodo
   `zephyr,user` con proprietà lette dal codice.
 - [ ] `modulo2/07_menuconfig_assert` — **menuconfig e assert.** Esplorare le opzioni con
@@ -311,8 +360,8 @@ la consegna e si scrive il codice sotto.
   `CONFIG_TIMESLICING`.
 - [ ] `modulo3/07_stack` — **Lo stack.** Uso dello stack con il thread analyzer, provocare uno
   stack overflow e riconoscerlo.
-- [ ] `modulo3/08_riepilogo` — **Riepilogo: quattro LED.** Un thread per LED a periodi diversi e
-  un thread di controllo che stampa lo stato.
+- [ ] `modulo3/08_riepilogo` — **Riepilogo: quattro LED.** Un thread per ciascuno dei 4 LED
+  della Discovery (PD12-PD15) a periodi diversi e un thread di controllo che stampa lo stato.
 
 ### Modulo 4 — Sincronizzazione e comunicazione
 
@@ -352,26 +401,27 @@ la consegna e si scrive il codice sotto.
 
 ### Modulo 6 — Periferiche e driver
 
-- [ ] `modulo6/01_pulsante_polling` — **Pulsante in polling.** Leggere `sw0` e accendere `led0`.
-- [ ] `modulo6/02_pulsante_campionato` — **Pulsante campionato con un timer.** `k_timer` ogni
-  10 ms, riconoscimento del fronte, contatore di pressioni; l'API degli interrupt GPIO
-  (`gpio_pin_interrupt_configure_dt`, callback) come si userebbe sulla scheda vera (bonus).
-- [ ] `modulo6/03_debounce` — **Debounce.** Debounce per campionamento (stato valido dopo 3
-  campioni uguali) per ignorare i rimbalzi (simulati con pressioni rapide da Renode).
-- [ ] `modulo6/04_uart_polling` — **UART in polling.** `uart_poll_in`/`uart_poll_out`: eco dei
-  caratteri digitati.
+- [ ] `modulo6/01_pulsante_polling` — **Pulsante in polling.** Leggere `sw0` (PA0, attivo
+  alto) e accendere `led0` (verde, PD12).
+- [ ] `modulo6/02_pulsante_interrupt` — **Pulsante a interrupt.** EXTI e NVIC,
+  `gpio_pin_interrupt_configure_dt`, callback, `k_sem` verso il thread, contatore di
+  pressioni. Bonus: campionamento con `k_timer` come alternativa.
+- [ ] `modulo6/03_debounce` — **Debounce.** Interrupt su entrambi i fronti + `k_work_delayable`
+  (30 ms) riprogrammato a ogni fronte; rimbalzi simulati in Renode con `pause`/`start`.
+- [ ] `modulo6/04_uart_polling` — **UART in polling.** `uart_poll_in`/`uart_poll_out` sulla
+  USART2: eco dei caratteri digitati.
 - [ ] `modulo6/05_uart_interrupt` — **UART a interrupt.** Ricezione a interrupt, buffer di riga,
   comandi `on`/`off` per il LED.
-- [ ] `modulo6/06_i2c_registri` — **I2C a basso livello.** Leggere il registro ID del BME280
-  e i coefficienti di calibrazione con `i2c_write` + `i2c_read`; repeated start e perché in
-  Renode non si usa.
-- [ ] `modulo6/07_driver_bme280` — **Un driver fatto da me: BME280.** `bme280_corso.c/.h`:
-  init, calibrazione, modo normal, formula di compensazione intera, temperatura in
-  centesimi. La sensor API di Zephyr come concetto. Riusato in 09 e nel progetto.
-- [ ] `modulo6/08_watchdog` — **Watchdog.** `wdt_install_timeout`, `wdt_feed` da un thread; cosa
-  succede quando il thread si blocca.
-- [ ] `modulo6/09_riepilogo` — **Riepilogo: termostato.** Lettura periodica del sensore con il
-  driver dell'esercizio 7, soglia, LED di allarme, pulsanti per cambiare modalità e soglia.
+- [ ] `modulo6/06_i2c_registri` — **I2C a basso livello.** Registri dell'ADT7420 con
+  `i2c_write_read_dt` (repeated start): ID `0xCB`, configurazione, temperatura a 13 bit e
+  conversione in centesimi senza float; `sim temp` per cambiarla.
+- [ ] `modulo6/07_sensore_api` — **La sensor API.** Stesso sensore con il driver ufficiale:
+  `sensor_sample_fetch`, `sensor_channel_get`, `struct sensor_value` (e i negativi).
+- [ ] `modulo6/08_watchdog` — **Watchdog.** IWDG attivato con overlay, `wdt_install_timeout`,
+  `wdt_feed` da un thread; cosa succede quando il thread si blocca.
+- [ ] `modulo6/09_riepilogo` — **Riepilogo: termostato.** Sensore con la sensor API, soglia,
+  LED rosso di allarme, tre pulsanti a interrupt (PA0, PE7, PE8 con overlay `gpio-keys`)
+  per modalità e soglia.
 
 ### Modulo 7 — Strumenti da professionista
 
@@ -398,11 +448,12 @@ passi sono nei file `.md`; le verifiche in `modulo8/verifiche/`.
 
 - [ ] `modulo8/01_specifica.md` — **Specifica e architettura.** Requisiti, thread, code,
   priorità e diagramma scritti da me prima di programmare.
-- [ ] `modulo8/02_acquisizione.md` — **Acquisizione.** Thread del sensore e coda delle misure.
-- [ ] `modulo8/03_elaborazione.md` — **Elaborazione.** Media mobile, soglie con isteresi, LED di
-  allarme.
-- [ ] `modulo8/04_pulsante.md` — **Tacitare l'allarme e battito.** Pulsante con debounce che
-  conferma l'allarme; LED1 di "battito".
+- [ ] `modulo8/02_acquisizione.md` — **Acquisizione.** Thread del sensore (sensor API) e coda
+  delle misure.
+- [ ] `modulo8/03_elaborazione.md` — **Elaborazione.** Media mobile, soglie con isteresi, LED
+  rosso di allarme.
+- [ ] `modulo8/04_pulsante.md` — **Tacitare l'allarme e battito.** Pulsante a interrupt con
+  debounce che conferma l'allarme; LED verde di "battito".
 - [ ] `modulo8/05_shell_config.md` — **Shell e configurazione.** Comandi `stato`, `soglia`,
   `storico`; soglie salvate con `settings`; `formato.c` per leggere numeri senza float.
 - [ ] `modulo8/06_robustezza.md` — **Robustezza.** Watchdog, gestione degli errori del sensore,

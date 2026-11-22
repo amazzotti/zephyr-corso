@@ -1,43 +1,42 @@
 # Verifica dell'esercizio modulo6/09_riepilogo
-# Ogni pulsante resta premuto finche' il firmware non risponde, poi si rilascia:
-# cosi' il debounce per campionamento ha sempre il tempo di vedere la pressione.
+# Le righe possono iniziare con il prompt "uart:~$ " della shell: niente ^ nelle regex.
 attendi: Booting Zephyr OS
-attendi: ^Modalita: automatica$
-attendi: ^Soglia: 30\.00 C$
-attendi: ^Temperatura: 22\.50 C$
+attendi: Modalita: automatica
+attendi: Soglia: 30\.00 C
+attendi: Temperatura: 22\.50 C
 
-# sw1: soglia sotto la temperatura -> allarme
-monitor: sysbus.gpio0.sw1 Press
-attendi: ^Soglia: 21\.50 C$
-monitor: sysbus.gpio0.sw1 Release
-attendi 15: ^ALLARME: 22\.50 C oltre la soglia
-controlla: sysbus.gpio0.led0 State => True
+# sw1 (PE7): soglia sotto la temperatura -> allarme
+monitor: sysbus.gpioPortE.sw1 Press
+attendi: Soglia: 21\.50 C
+monitor: sysbus.gpioPortE.sw1 Release
+attendi 15: ALLARME: 22\.50 C oltre la soglia
+controlla: sysbus.gpioPortD.led2 State => True
 pausa: 200
 
-# sw2: soglia sopra la temperatura -> rientro
-monitor: sysbus.gpio0.sw2 Press
-attendi: ^Soglia: 23\.50 C$
-monitor: sysbus.gpio0.sw2 Release
-attendi 15: ^Allarme rientrato$
-controlla: sysbus.gpio0.led0 State => False
+# sw2 (PE8): soglia sopra la temperatura -> rientro
+monitor: sysbus.gpioPortE.sw2 Press
+attendi: Soglia: 23\.50 C
+monitor: sysbus.gpioPortE.sw2 Release
+attendi 15: Allarme rientrato
+controlla: sysbus.gpioPortD.led2 State => False
 pausa: 200
 
-# di nuovo in allarme, poi manutenzione: l'allarme si spegne, led1 si accende
-monitor: sysbus.gpio0.sw1 Press
-attendi: ^Soglia: 21\.50 C$
-monitor: sysbus.gpio0.sw1 Release
-attendi 15: ^ALLARME:
+# di nuovo in allarme, poi manutenzione: l'allarme si spegne, il LED arancione si accende
+monitor: sysbus.gpioPortE.sw1 Press
+attendi: Soglia: 21\.50 C
+monitor: sysbus.gpioPortE.sw1 Release
+attendi 15: ALLARME:
 pausa: 200
-monitor: sysbus.gpio0.sw0 Press
-attendi: ^Modalita: manutenzione$
-monitor: sysbus.gpio0.sw0 Release
-controlla: sysbus.gpio0.led1 State => True
-controlla: sysbus.gpio0.led0 State => False
+monitor: sysbus.gpioPortA.sw0 Press
+attendi: Modalita: manutenzione
+monitor: sysbus.gpioPortA.sw0 Release
+controlla: sysbus.gpioPortD.led1 State => True
+controlla: sysbus.gpioPortD.led2 State => False
 pausa: 200
 
 # di nuovo automatica
-monitor: sysbus.gpio0.sw0 Press
-attendi: ^Modalita: automatica$
-monitor: sysbus.gpio0.sw0 Release
-controlla: sysbus.gpio0.led1 State => False
+monitor: sysbus.gpioPortA.sw0 Press
+attendi: Modalita: automatica
+monitor: sysbus.gpioPortA.sw0 Release
+controlla: sysbus.gpioPortD.led1 State => False
 mai: Errore

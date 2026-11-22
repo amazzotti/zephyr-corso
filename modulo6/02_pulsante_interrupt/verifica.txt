@@ -1,0 +1,22 @@
+# Verifica dell'esercizio modulo6/02_pulsante_interrupt
+attendi: Booting Zephyr OS
+attendi: Pronto: premi sw0
+controlla: sysbus.gpioPortD.led0 State => False
+monitor: sysbus.gpioPortA.sw0 Press
+attendi: ^Pressioni: 1$
+controlla: sysbus.gpioPortD.led0 State => True
+monitor: sysbus.gpioPortA.sw0 Release
+pausa: 200
+monitor: sysbus.gpioPortA.sw0 Press
+attendi: ^Pressioni: 2$
+controlla: sysbus.gpioPortD.led0 State => False
+monitor: sysbus.gpioPortA.sw0 Release
+pausa: 200
+monitor: sysbus.gpioPortA.sw0 Press
+attendi: ^Pressioni: 3$
+controlla: sysbus.gpioPortD.led0 State => True
+monitor: sysbus.gpioPortA.sw0 Release
+pausa: 300
+# Il rilascio non deve contare come pressione.
+mai: ^Pressioni: 4
+mai: Errore

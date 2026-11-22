@@ -4,7 +4,7 @@ attendi 15: uart:~\$
 scrivi: kernel version
 attendi: Zephyr version
 scrivi: device list
-attendi: gpio@50000000
+attendi: gpio@40020c00
 scrivi: kernel uptime
 attendi: Uptime
 attendi 20: battito 1

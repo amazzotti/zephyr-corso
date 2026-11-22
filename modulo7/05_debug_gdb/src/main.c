@@ -15,9 +15,11 @@
  *        .\esegui.ps1 modulo7\05_debug_gdb -Pausa
  *    Nel monitor di Renode:
  *        machine StartGdbServer 3333
- * 2. Trova gdb. E' nello Zephyr SDK, nella cartella arm-zephyr-eabi\bin. Di solito
- *    l'SDK e' in %USERPROFILE%\zephyr-sdk-<versione>; se non c'e':
- *        Get-ChildItem -Path $env:USERPROFILE, C:\ -Filter arm-zephyr-eabi-gdb.exe -Recurse -ErrorAction SilentlyContinue -Depth 4
+ * 2. Trova gdb. E' nello Zephyr SDK, nella cartella gnu\arm-zephyr-eabi\bin. Su questo
+ *    PC (SDK 1.0.1):
+ *        C:\Users\aless\zephyr-sdk-1.0.1\gnu\arm-zephyr-eabi\bin\arm-zephyr-eabi-gdb.exe
+ *    Con un'altra versione dell'SDK cercalo cosi':
+ *        Get-ChildItem -Path $env:USERPROFILE -Filter arm-zephyr-eabi-gdb.exe -Recurse -ErrorAction SilentlyContinue -Depth 5
  * 3. In un secondo terminale (nella cartella del repo):
  *        & "<percorso>\arm-zephyr-eabi-gdb.exe" modulo7\05_debug_gdb\build\zephyr\zephyr.elf
  *    Poi, dentro gdb:

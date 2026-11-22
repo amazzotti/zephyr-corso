@@ -29,17 +29,18 @@
  *
  * OUTPUT ATTESO (senza banner!)
  *     Banner: no
- *     Tick al secondo: 32768        (il numero puo' essere diverso)
+ *     Tick al secondo: 10000        (il numero puo' essere diverso)
  *     Stack di main: 1024 byte      (il numero puo' essere diverso)
- *     Scheda: nrf52840dk
+ *     Scheda: stm32f4_disco
  *
  * CONCETTI NUOVI
  * - prj.conf: le TUE opzioni; tutte le altre prendono il valore predefinito della
  *   board e di Zephyr. Il risultato completo e' build/zephyr/.config.
  * - Ogni opzione attiva diventa una macro CONFIG_... visibile in tutto il codice.
  *   Un bool impostato a n NON definisce la macro: per questo si usa IS_ENABLED().
- * - Il "tick" e' l'unita' di tempo del kernel: sull'nRF52840 il tempo lo conta
- *   una periferica RTC alimentata da un quarzo a 32768 Hz.
+ * - Il "tick" e' l'unita' di tempo del kernel: sull'STM32F4 il tempo lo conta il
+ *   SysTick, un timer interno al core Cortex-M che conta i cicli di clock (168 MHz,
+ *   CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC) e genera un interrupt a ogni tick.
  * - Configurare = decidere in compilazione cosa entra nel firmware. Cio' che e'
  *   spento non occupa memoria: importante su un chip con 1 MB di flash.
  *
@@ -59,7 +60,8 @@
  *   (Poi rimetti com'era.)
  * - In .config cerca CONFIG_SERIAL e CONFIG_UART_CONSOLE: chi li ha attivati, se in
  *   prj.conf non ci sono? (Suggerimento: i default della board, file
- *   zephyr/boards/nordic/nrf52840dk/nrf52840dk_nrf52840_defconfig.)
+ *   zephyr/boards/st/stm32f4_disco/stm32f4_disco_defconfig.) E CONFIG_GPIO? Su
+ *   questa scheda e' spento: per i LED andra' attivato a mano (esercizio 5).
  *
  * Scrivi il tuo codice qui sotto.
  */

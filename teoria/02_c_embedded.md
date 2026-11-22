@@ -317,15 +317,22 @@ elencano in `CMakeLists.txt` con `target_sources(app PRIVATE src/main.c src/stat
 
 ## 10. La memoria del microcontrollore
 
-Il nRF52840 vede un unico spazio di indirizzi a 32 bit (*mappa di memoria*):
+Lo STM32F407 vede un unico spazio di indirizzi a 32 bit (*mappa di memoria*):
 
 ```
-0x00000000 - 0x000FFFFF   FLASH (1 MB)       codice e costanti
-0x10000000 - ...          FICR / UICR        registri di informazione e configurazione
-0x20000000 - 0x2003FFFF   RAM (256 KB)       variabili, stack
-0x40000000 - ...          PERIFERICHE        registri di UART, timer, I2C, ...
-0x50000000 - ...          GPIO               registri dei pin
+0x00000000 - ...          alias della flash all'avvio (la CPU legge qui i vettori)
+0x08000000 - 0x080FFFFF   FLASH (1 MB)       codice e costanti
+0x10000000 - 0x1000FFFF   RAM CCM (64 KB)    RAM veloce usata solo dalla CPU (Zephyr qui non la usa)
+0x1FFF7A10                UID                identificativo unico del chip (96 bit)
+0x20000000 - 0x2001FFFF   RAM (128 KB)       variabili, stack
+0x40000000 - ...          PERIFERICHE APB    registri di USART, timer, I2C, watchdog, ...
+0x40020000 - ...          PERIFERICHE AHB1   GPIOA (0x40020000), GPIOB, ... GPIOD (0x40020C00),
+                                             RCC (0x40023800, i clock)
+0xE0000000 - ...          CORE               registri del Cortex-M (NVIC, SysTick, DBGMCU)
 ```
+
+(In Renode la RAM simulata è più grande, fino a `0x2003FFFF`, e l'alias a `0x00000000` e la
+CCM non sono mappati: il firmware non se ne accorge.)
 
 Il linker divide il programma in **sezioni**:
 
@@ -353,28 +360,41 @@ quella zona di stack verrà riusata.
 
 Le periferiche si comandano tramite **registri**: celle a 32 bit che si trovano a indirizzi
 fissi della mappa di memoria. Leggere o scrivere a quell'indirizzo non tocca la RAM ma la
-periferica (*memory-mapped I/O*). Gli indirizzi sono nel manuale del chip (*datasheet* o
-*product specification*).
+periferica (*memory-mapped I/O*). Gli indirizzi sono nel manuale del chip: per lo STM32F407
+è il *reference manual* RM0090 (il *datasheet* contiene invece i dati elettrici e i pin).
 
-Esempio, porta GPIO P0 del nRF52840 (base `0x50000000`):
+**Prima regola degli STM32: il clock.** Ogni periferica ha un "interruttore" del clock nel
+blocco **RCC** (*Reset and Clock Control*). Dopo il reset quasi tutte sono spente per
+risparmiare energia: finché non accendi il clock, la periferica non risponde e le
+scritture nei suoi registri non hanno effetto. Per la porta GPIOD l'interruttore è il bit 3
+(`GPIODEN`) di `RCC_AHB1ENR`, a `0x40023830`. (Zephyr accende da solo i clock delle
+periferiche che usa; Renode non simula questo "spegnimento", ma sulla scheda vera dimenticarlo
+è l'errore numero uno.)
+
+Esempio, porta GPIOD dello STM32F407 (base `0x40020C00`; ogni porta occupa `0x400` byte):
 
 | Registro | Indirizzo | Effetto |
 |---|---|---|
-| `OUT` | `0x50000504` | stato delle uscite (un bit per pin) |
-| `OUTSET` | `0x50000508` | scrivendo 1 in un bit, porta a 1 quel pin (gli altri non cambiano) |
-| `OUTCLR` | `0x5000050C` | scrivendo 1 in un bit, porta a 0 quel pin |
-| `DIRSET` | `0x50000518` | scrivendo 1 in un bit, rende quel pin un'uscita |
+| `MODER` | `0x40020C00` | modo di ogni pin, **2 bit per pin**: `00` ingresso, `01` uscita, `10` funzione alternativa (es. USART), `11` analogico. Il pin *n* usa i bit `2n+1..2n` |
+| `IDR` | `0x40020C10` | livello letto sui pin (un bit per pin), sola lettura |
+| `ODR` | `0x40020C14` | livello delle uscite (un bit per pin) |
+| `BSRR` | `0x40020C18` | scrivendo 1 nel bit *n* porta a 1 il pin *n* (*Set*); scrivendo 1 nel bit *n+16* lo porta a 0 (*Reset*). Gli altri pin non cambiano |
 
-I registri `SET`/`CLR` evitano la sequenza leggi-modifica-scrivi: un'unica scrittura,
-senza rischio di toccare gli altri bit.
+`BSRR` evita la sequenza leggi-modifica-scrivi su `ODR`: un'unica scrittura, senza rischio
+di toccare gli altri bit e senza che un interrupt possa "intromettersi" a metà.
+`MODER` invece ha campi di 2 bit: per cambiare un pin si azzera il suo campo e poi lo si
+imposta (leggi-modifica-scrivi).
 
 In C si accede a un registro con un puntatore a un indirizzo fisso:
 
 ```c
 #define REG32(indirizzo) (*(volatile uint32_t *)(indirizzo))
 
-REG32(0x50000518) = BIT(13);    /* P0.13 diventa un'uscita */
-uint32_t out = REG32(0x50000504);
+REG32(0x40023830) |= BIT(3);                                    /* clock di GPIOD   */
+REG32(0x40020C00) = (REG32(0x40020C00) & ~(3UL << 30)) | (1UL << 30); /* PD15 uscita */
+REG32(0x40020C18) = BIT(15);                                    /* PD15 a 1          */
+REG32(0x40020C18) = BIT(15 + 16);                               /* PD15 a 0          */
+uint32_t odr = REG32(0x40020C14);
 ```
 
 **`volatile`** dice al compilatore: "questo valore può cambiare, o la sua scrittura può avere
@@ -388,8 +408,14 @@ Nella pratica con Zephyr **non** si scrive nei registri a mano: si usano i drive
 Modulo 2), che sono portabili su chip diversi. Ma i driver fanno esattamente questo, e
 saperlo ti permette di capire cosa succede e di fare debug.
 
-Sui LED della scheda DK: sono collegati in modo che si accendono quando il pin è a **0**
-(*attivi bassi*). Quindi `OUTCLR` accende, `OUTSET` spegne.
+I LED della Discovery (PD12 verde, PD13 arancione, PD14 rosso, PD15 blu) si accendono
+quando il pin è a **1** (*attivi alti*): `BSRR` bit *n* accende, bit *n+16* spegne. Su altre
+schede i LED possono essere *attivi bassi* (acceso = pin a 0): il devicetree di Zephyr lo
+indica con `GPIO_ACTIVE_LOW` e il driver ne tiene conto per te.
+
+Un altro registro utile: `DBGMCU_IDCODE` a `0xE0042000` contiene l'identificativo del
+modello di chip (bit 11..0 `DEV_ID`, bit 31..16 `REV_ID`). Sullo STM32F407 `DEV_ID` vale
+`0x413`; in Renode l'intero registro vale `0x10006411`.
 
 ## 12. Il buffer circolare
 

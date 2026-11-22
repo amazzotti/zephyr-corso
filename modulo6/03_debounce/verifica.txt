@@ -1,16 +1,32 @@
 # Verifica dell'esercizio modulo6/03_debounce
+# I rimbalzi si simulano fermando il tempo virtuale (pause), dando piu' comandi e
+# ripartendo (start): tutti i fronti arrivano nello stesso istante simulato.
 attendi: Booting Zephyr OS
 attendi: Pronto: premi sw0
-monitor: sysbus.gpio0.sw0 Press
+
+# Pressione con rimbalzi: deve contare UNA volta
+monitor: pause
+monitor: sysbus.gpioPortA.sw0 Press
+monitor: sysbus.gpioPortA.sw0 Release
+monitor: sysbus.gpioPortA.sw0 Press
+monitor: start
 attendi: ^Pressioni valide: 1$
-controlla: sysbus.gpio0.led0 State => True
-monitor: sysbus.gpio0.sw0 Release
+controlla: sysbus.gpioPortD.led0 State => True
+
+# Rilascio con rimbalzi
+monitor: pause
+monitor: sysbus.gpioPortA.sw0 Release
+monitor: sysbus.gpioPortA.sw0 Press
+monitor: sysbus.gpioPortA.sw0 Release
+monitor: start
 attendi: ^Rilasciato
-monitor: sysbus.gpio0.sw0 Press
+
+# Seconda pressione, pulita
+monitor: sysbus.gpioPortA.sw0 Press
 attendi: ^Pressioni valide: 2$
-controlla: sysbus.gpio0.led0 State => False
-monitor: sysbus.gpio0.sw0 Release
+controlla: sysbus.gpioPortD.led0 State => False
+monitor: sysbus.gpioPortA.sw0 Release
 attendi: ^Rilasciato
 pausa: 300
-mai: ^Pressioni valide: 3
+mai: Pressioni valide: 3
 mai: Errore

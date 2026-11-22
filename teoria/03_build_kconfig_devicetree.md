@@ -51,7 +51,7 @@ Nel codice, ogni opzione attiva diventa una macro `CONFIG_...`:
 |---|---|
 | bool `y` | `#define CONFIG_LOG 1` (se `n`, la macro **non esiste**) |
 | int | `#define CONFIG_MAIN_STACK_SIZE 2048` |
-| string | `#define CONFIG_BOARD "nrf52840dk"` |
+| string | `#define CONFIG_BOARD "stm32f4_disco"` |
 
 Per i bool si usa `IS_ENABLED(CONFIG_X)`, che vale 1 o 0 anche se la macro non esiste:
 
@@ -129,37 +129,47 @@ Il codice di un driver UART è lo stesso per tutte le UART del chip; cambiano in
 interrupt, pin, velocità. Il **devicetree** è un file di testo che descrive l'hardware della
 scheda: **quali periferiche ci sono, dove sono, come sono collegate**.
 
+Ecco un estratto (semplificato) del devicetree della STM32F4 Discovery:
+
 ```dts
 / {
 	chosen {
-		zephyr,console = &uart0;        /* quale UART usare per printk */
+		zephyr,console = &usart2;       /* quale UART usare per printk */
 	};
 	aliases {
-		led0 = &led0;                   /* nomi "generici" usati dagli esempi */
+		led0 = &green_led_4;            /* nomi "generici" usati dagli esempi */
+		sw0 = &user_button;
 	};
 	leds {
 		compatible = "gpio-leds";
-		led0: led_0 {                   /* etichetta: nome_nodo */
-			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
-			label = "Green LED 0";
+		green_led_4: led_4 {            /* etichetta: nome_nodo */
+			gpios = <&gpiod 12 GPIO_ACTIVE_HIGH>;   /* porta D, pin 12 */
+			label = "User LD4";
 		};
 	};
 	soc {
-		uart0: uart@40002000 {          /* @indirizzo */
-			compatible = "nordic,nrf-uarte";
-			reg = <0x40002000 0x1000>;  /* indirizzo e dimensione dei registri */
+		usart2: serial@40004400 {       /* @indirizzo */
+			compatible = "st,stm32-usart", "st,stm32-uart";
+			reg = <0x40004400 0x400>;   /* indirizzo e dimensione dei registri */
 			current-speed = <115200>;
 			status = "okay";            /* "disabled" = il driver non viene compilato */
+		};
+		gpiod: gpio@40020c00 {
+			compatible = "st,stm32-gpio";
+			reg = <0x40020c00 0x400>;
 		};
 	};
 };
 ```
 
 Termini:
-- **nodo**: un elemento (`uart@40002000`), con figli tra `{ }`;
+- **nodo**: un elemento (`serial@40004400`), con figli tra `{ }`;
 - **proprietà**: `nome = valore;` — numeri tra `< >`, stringhe tra `" "`;
-- **etichetta** (*node label*): `uart0:` prima del nodo, per riferirsi a lui con `&uart0`;
-- **alias** e **chosen**: nomi di comodo che puntano a un nodo;
+- **etichetta** (*node label*): `usart2:` prima del nodo, per riferirsi a lui con `&usart2`.
+  Sulla Discovery le etichette dei LED sono `green_led_4`, `orange_led_3`, `red_led_5`,
+  `blue_led_6` (il numero è quello stampato sulla scheda: LD3...LD6);
+- **alias** e **chosen**: nomi di comodo che puntano a un nodo. `led0` è un **alias**, non
+  un'etichetta: in un overlay scrivi `&green_led_4`, non `&led0`;
 - **compatible**: dice quale **driver** e quale *binding* (lo schema delle proprietà
   ammesse, file `.yaml` in `zephyr/dts/bindings/`) si applicano al nodo;
 - **status**: solo i nodi `okay` diventano dispositivi utilizzabili.
@@ -176,7 +186,7 @@ compilazione** (costo zero a runtime):
 
 | Macro | Esempio | Risultato |
 |---|---|---|
-| `DT_NODELABEL(etichetta)` | `DT_NODELABEL(uart0)` | il nodo con etichetta `uart0` |
+| `DT_NODELABEL(etichetta)` | `DT_NODELABEL(usart2)` | il nodo con etichetta `usart2` |
 | `DT_ALIAS(alias)` | `DT_ALIAS(led0)` | il nodo puntato dall'alias |
 | `DT_CHOSEN(nome)` | `DT_CHOSEN(zephyr_console)` | il nodo scelto (`,` e `-` diventano `_`) |
 | `DT_PATH(a, b)` | `DT_PATH(zephyr_user)` | il nodo per percorso `/zephyr,user` |
@@ -195,12 +205,15 @@ cerca nel messaggio il nome della proprietà o del nodo e confrontalo con `zephy
 ## 7. GPIO: il primo LED
 
 **GPIO** (*General Purpose Input/Output*): pin del chip che il software può portare a 0 o 1
-(uscita) o leggere (ingresso). Nell'nRF52840 la porta `gpio0` ha 32 pin, comandati da
-registri (`OUT`, `OUTSET`, `OUTCLR`, `DIR`, `IN`...) a partire da `0x50000500`.
+(uscita) o leggere (ingresso). Nello STM32F407 i pin sono divisi in **porte** da 16 pin
+(GPIOA, GPIOB, ..., GPIOD...): PD12 è il pin 12 della porta D. Ogni porta ha i suoi
+registri: `MODER` (ingresso/uscita), `IDR` (livelli letti), `ODR` (livelli in uscita),
+`BSRR` (accende/spegne singoli bit)... La porta D parte da `0x40020c00`. Prima di usare una
+porta bisogna accenderne il **clock** (registro `RCC_AHB1ENR`): lo fa il driver.
 
 Zephyr nasconde i registri dietro un'API uguale per tutti i chip. La struttura
 `gpio_dt_spec` raccoglie in un colpo dal devicetree: dispositivo della porta, numero di pin e
-flag (es. *attivo basso*):
+flag (es. *attivo alto* o *attivo basso*):
 
 ```c
 #include <zephyr/drivers/gpio.h>
@@ -215,9 +228,15 @@ gpio_pin_set_dt(&led, 1);                          /* 1 = ATTIVO (acceso) */
 gpio_pin_toggle_dt(&led);                          /* inverte */
 ```
 
-**Attivo basso** (`GPIO_ACTIVE_LOW`): sulla DK il LED si accende quando il pin è a **0**
-(il LED è collegato tra l'alimentazione e il pin). Con le funzioni `_dt` lavori in valori
-*logici* (1 = acceso): l'inversione la fa Zephyr leggendo il flag dal devicetree.
+Sulla STM32F4 il driver GPIO **non è attivo di default**: nel `prj.conf` serve
+`CONFIG_GPIO=y`, altrimenti le funzioni `gpio_...` non esistono (errore di link).
+
+**Attivo alto** (`GPIO_ACTIVE_HIGH`): sulla Discovery il LED si accende quando il pin è a
+**1** (il LED, con la sua resistenza, va dal pin a massa). Su altre schede trovi LED
+**attivi bassi** (`GPIO_ACTIVE_LOW`), collegati tra l'alimentazione e il pin: si accendono
+con il pin a **0**. Con le funzioni `_dt` lavori sempre in valori *logici* (1 = acceso):
+l'eventuale inversione la fa Zephyr leggendo il flag dal devicetree, e il tuo codice non
+cambia passando da una scheda all'altra.
 
 Le funzioni restituiscono un `int`: 0 = tutto bene, negativo = codice di errore (es.
 `-EINVAL`, `-ENODEV`). È la convenzione di tutto Zephyr.
@@ -231,7 +250,7 @@ sensore su I2C), cambiare proprietà, aggiungere alias.
 ```dts
 / {
 	aliases {
-		allarme = &led2;            /* nuovo alias: nel codice DT_ALIAS(allarme) */
+		allarme = &red_led_5;       /* nuovo alias: nel codice DT_ALIAS(allarme) */
 	};
 
 	zephyr,user {                   /* nodo "libero" per i parametri della tua app */
@@ -240,7 +259,7 @@ sensore su I2C), cambiare proprietà, aggiungere alias.
 	};
 };
 
-&uart0 {                            /* modificare un nodo esistente tramite etichetta */
+&usart2 {                           /* modificare un nodo esistente tramite etichetta */
 	current-speed = <9600>;
 };
 ```

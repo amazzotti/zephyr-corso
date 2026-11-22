@@ -2,8 +2,9 @@
 # Non si lancia da solo: viene incluso dagli altri script.
 
 $script:Radice = Split-Path -Parent $PSScriptRoot
-$script:Board  = 'nrf52840dk/nrf52840'
-$script:Repl   = Join-Path $script:Radice 'renode\nrf52840dk.repl'
+$script:Board  = 'stm32f4_disco'
+$script:UartConsole = 'sysbus.usart2'      # UART della console Zephyr (zephyr,console = &usart2)
+$script:Repl   = Join-Path $script:Radice 'renode\stm32f4_disco.repl'
 $script:Resc   = Join-Path $script:Radice 'renode\esercizio.resc'
 
 # Percorso per Renode: barre normali, che Renode accetta anche su Windows.

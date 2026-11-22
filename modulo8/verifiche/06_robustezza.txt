@@ -1,7 +1,8 @@
 # Verifica del passo 6 (guasto del sensore, watchdog)
 # Uso: .\verifica.ps1 modulo8\progetto -File modulo8\verifiche\06_robustezza.txt
-monitor: sysbus.twi0.bme280 Temperature 22
-attendi 15: uart:~\$
+attendi: NODO AVVIATO
+scrivi: sim temp 2200
+attendi: sim: temperatura 22\.00 C
 pausa: 2000
 scrivi: guasto on
 attendi 15: ERRORE SENSORE

@@ -2,9 +2,10 @@
 
 ## 1. Come il kernel misura il tempo
 
-Il kernel conta il tempo in **tick**: unità fisse generate da un timer hardware. Sul nRF52840
-Zephyr usa la periferica **RTC1**, che conta a 32768 Hz (un quarzo da orologio): un tick dura
-circa 30,5 microsecondi (`CONFIG_SYS_CLOCK_TICKS_PER_SEC=32768`).
+Il kernel conta il tempo in **tick**: unità fisse generate da un timer hardware. Sullo
+STM32F4 Zephyr usa il **SysTick**, il timer a 24 bit integrato in ogni CPU Cortex-M, che
+conta i cicli di clock della CPU (168 MHz, `CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC=168000000`).
+Il kernel ragiona in tick da 100 microsecondi (`CONFIG_SYS_CLOCK_TICKS_PER_SEC=10000`).
 
 Zephyr è **tickless**: non riceve un interrupt a ogni tick, ma programma il timer hardware
 perché scatti solo quando serve (la prossima scadenza). Così la CPU dorme di più e consuma
@@ -17,8 +18,10 @@ meno.
 | `k_uptime_delta(&rif)` | ms trascorsi da `rif`, e aggiorna `rif` |
 | `k_cycle_get_32()` | contatore ad alta risoluzione (`sys_clock_hw_cycles_per_sec()` al secondo) |
 
-I **timeout** (`K_MSEC(100)`) vengono arrotondati ai tick: 100 ms = 3276,8 tick, quindi
-nella realtà 3277 tick. Piccoli errori, che però si **accumulano** (sezione 9).
+I **timeout** (`K_MSEC(100)`) vengono convertiti in tick: con 10000 tick al secondo 100 ms
+sono esattamente 1000 tick, ma `K_USEC(150)` diventa 2 tick (200 µs, arrotondato per
+eccesso). Altre schede usano timer a 32768 Hz, dove 100 ms = 3276,8 tick → 3277. Piccoli
+errori, che però si **accumulano** (sezione 9).
 
 ## 2. Interrupt
 
@@ -156,8 +159,9 @@ dati:      d    d    d    d                    (stop)
 scadenza:  -->3s -->3s -->3s -->3s ........... ALLARME
 ```
 
-Altro uso: il **debounce** di un pulsante a interrupt sulla scheda vera (nel Modulo 6, in
-Renode, il pulsante si campiona invece con un `k_timer`: teoria 07, sezioni 4 e 5).
+Altro uso: il **debounce** di un pulsante a interrupt: l'interrupt del pulsante
+(ri)programma un lavoro ritardato di 50 ms, e solo quando il pin è rimasto fermo per 50 ms
+il lavoro legge lo stato definitivo (Modulo 6, teoria 07).
 
 ## 8. Una work queue propria
 
@@ -209,7 +213,7 @@ accumula. In alternativa si può dormire fino a un istante **assoluto**:
 
 ## 10. Il tempo in Renode
 
-Renode simula il timer RTC1 della scheda, quindi Zephyr "vede" il tempo come su una scheda
+Renode simula il SysTick della CPU, quindi Zephyr "vede" il tempo come su una scheda
 vera: le misure fatte con `k_uptime_get` sono coerenti tra loro e le differenze (deriva,
 ritardi, ordine degli eventi) si osservano davvero.
 

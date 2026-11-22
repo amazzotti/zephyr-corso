@@ -30,7 +30,7 @@
  *    Se un argomento non e' un numero: shell_error(sh, "argomento non valido: %s", ...)
  *    e return -EINVAL. Se va tutto bene stampa "2 + 3 = 5".
  * 5. Prova con .\esegui.ps1 modulo7\02_comandi_propri e guarda il LED nel monitor di
- *    Renode con: sysbus.gpio0.led0 State
+ *    Renode con: sysbus.gpioPortD.led0 State
  *
  * OUTPUT ATTESO
  *     uart:~$ led on

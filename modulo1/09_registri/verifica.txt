@@ -1,9 +1,12 @@
 # Verifica dell'esercizio modulo1/09_registri
-attendi: ^DEVICEID = 0x[0-9a-f]{16}$
+attendi: ^IDCODE = 0x[0-9a-f]{8}$
+attendi: ^DEV_ID = 0x[0-9a-f]{3}  REV_ID = 0x[0-9a-f]{4}$
+attendi: ^Clock GPIOD acceso: 1$
+attendi: ^MODER pin 15 = 1$
 attendi: ^LED acceso$
-attendi: ^OUT bit 13 = 0$
+attendi: ^ODR bit 15 = 1$
 attendi: ^LED spento$
-attendi: ^OUT bit 13 = 1$
+attendi: ^ODR bit 15 = 0$
 attendi: ^LED acceso di nuovo$
 pausa: 300
-controlla: sysbus.gpio0.led0 State => True
+controlla: sysbus.gpioPortD.led3 State => True

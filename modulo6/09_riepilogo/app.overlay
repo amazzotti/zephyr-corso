@@ -1,9 +1,34 @@
 /*
- * Overlay dell'esercizio modulo6/09_riepilogo.
+ * Overlay dell'esercizio modulo6/09_riepilogo (gia' pronto: e' configurazione).
  *
- * Il sensore non ha bisogno di un nodo: lo comanda il tuo driver (esercizio 7) sul bus
- * i2c0, gia' attivo sulla nrf52840dk.
- * Facoltativo: alias tuoi per i ruoli dei LED e dei pulsanti, per esempio
- *     / { aliases { led-allarme = &led0; puls-modo = &button0; }; };
- * cosi' nel codice scrivi DT_ALIAS(led_allarme) invece di DT_ALIAS(led0).
+ * La Discovery ha un solo pulsante utente (sw0, PA0). La scheda simulata ne ha altri tre
+ * su PE7, PE8, PE9 (renode/stm32f4_disco.repl): qui ne dichiariamo due, con gli alias
+ * sw1 e sw2. Attivi alti, con resistenza di pull-down interna.
+ *
+ * Il sensore NON e' qui: lo aggiunge comune/sensore_sim.overlay (vedi CMakeLists.txt).
  */
+
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	pulsanti_extra {
+		compatible = "gpio-keys";
+
+		pulsante_1: pulsante_1 {
+			label = "SW1 (PE7)";
+			gpios = <&gpioe 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+			zephyr,code = <INPUT_KEY_1>;
+		};
+
+		pulsante_2: pulsante_2 {
+			label = "SW2 (PE8)";
+			gpios = <&gpioe 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+			zephyr,code = <INPUT_KEY_2>;
+		};
+	};
+
+	aliases {
+		sw1 = &pulsante_1;
+		sw2 = &pulsante_2;
+	};
+};

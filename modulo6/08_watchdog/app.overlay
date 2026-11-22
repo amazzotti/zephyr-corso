@@ -1,0 +1,18 @@
+/*
+ * Overlay dell'esercizio modulo6/08_watchdog.
+ *
+ * Il watchdog indipendente dell'STM32F4 (IWDG, contato dal clock interno LSI a ~32 kHz)
+ * esiste nel devicetree del chip, ma la scheda stm32f4_disco non lo attiva.
+ * Qui lo attiviamo e gli diamo l'alias standard "watchdog0", che il codice usa con
+ * DEVICE_DT_GET(DT_ALIAS(watchdog0)).
+ */
+
+&iwdg {
+	status = "okay";
+};
+
+/ {
+	aliases {
+		watchdog0 = &iwdg;
+	};
+};

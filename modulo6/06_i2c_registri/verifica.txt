@@ -1,9 +1,10 @@
 # Verifica dell'esercizio modulo6/06_i2c_registri
+# Le righe possono iniziare con il prompt "uart:~$ " della shell: niente ^ nelle regex.
 attendi: Booting Zephyr OS
-attendi: indirizzo 0x76
-attendi: ^ID chip: 0x60$
-attendi: ^BME280 trovato$
-attendi: ^Calibrazione: 00 80 00 80 00 00\s*$
-attendi: ^dig_T1 = 32768, dig_T2 = -32768, dig_T3 = 0$
+attendi: ID: 0xcb
+attendi: Configurazione: 0x[0-9a-f]{2}
+attendi: Grezzo: 360 -> 22\.50 C
+scrivi: sim temp 3550
+attendi: sim: temperatura 35\.50 C
+attendi: Grezzo: 568 -> 35\.50 C
 mai: Errore
-mai: Chip sconosciuto

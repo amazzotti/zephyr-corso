@@ -6,8 +6,8 @@ metodo per passare da "cosa deve fare" a "come è fatto", prima di scrivere codi
 ## 1. Dalla richiesta ai requisiti
 
 Un **requisito** è una frase verificabile. "Deve controllare la temperatura" non lo è;
-"deve leggere la temperatura ogni secondo e accendere LED0 entro 10 s da quando la media
-supera la soglia" sì: si può scrivere un test che lo controlla.
+"deve leggere la temperatura ogni secondo e accendere il LED rosso entro 10 s da quando la
+media supera la soglia" sì: si può scrivere un test che lo controlla.
 
 - **Funzionali**: cosa fa (letture, allarmi, comandi).
 - **Non funzionali**: con quali vincoli (tempi, memoria, robustezza, consumo).
@@ -20,8 +20,8 @@ Per ogni cosa da fare chiediti: **quando** deve succedere e **quanto dura**?
 
 | Tipo di attività | Strumento Zephyr |
 |---|---|
-| reazione immediata e brevissima a un evento hardware | **ISR** / callback (es. UART, timer; il pulsante sulla scheda vera): solo registrare l'evento |
-| controllo periodico di un ingresso | **k_timer** che campiona (es. pulsante con debounce, come in questo corso) |
+| reazione immediata e brevissima a un evento hardware | **ISR** / callback (es. pulsante via EXTI, UART, timer): solo registrare l'evento |
+| controllo periodico di un ingresso | **k_timer** che campiona (alternativa all'interrupt, per esempio per molti pulsanti) |
 | lavoro breve dopo un evento o un ritardo | **work** / **delayable work** |
 | attività periodica regolare, breve | **k_timer** + work, oppure thread con sleep |
 | attività che si blocca (attende I2C, attende una coda) | **thread** proprio |
@@ -86,7 +86,7 @@ Dividi il codice in due tipi di file:
 Così se cambi sensore cambi un file solo, e se un test fallisce sai che il problema è nella
 logica e non nella simulazione.
 
-**Numeri a virgola fissa.** Il nRF52840 ha una FPU, ma nel progetto usiamo interi in
+**Numeri a virgola fissa.** L'STM32F407 (Cortex-M4F) ha una FPU, ma nel progetto usiamo interi in
 **centesimi di grado** (`int32_t`, 2345 = 23.45 °C): confronti esatti, test semplici,
 stampa con `%d.%02d`. Attenzione ai negativi: -0.50 °C è `-50`, e `-50 / 100 = 0` (si perde
 il segno); stampa il segno a parte.

@@ -20,7 +20,8 @@ Requisiti coperti: **R10, R11**, N2, N3.
    - durante il guasto il filtro non riceve valori e lo stato dell'allarme resta
      com'è (oppure decidi tu: scrivilo nella specifica e motivalo);
    - `stato` mostra una riga in più: `Sensore: OK` oppure `Sensore: GUASTO`.
-3. **Watchdog** (`CONFIG_WATCHDOG=y`, dispositivo `DEVICE_DT_GET(DT_NODELABEL(wdt0))`):
+3. **Watchdog** (`CONFIG_WATCHDOG=y`, dispositivo `DEVICE_DT_GET(DT_ALIAS(watchdog0))`:
+   l'IWDG, già attivato in `app.overlay`):
    timeout 5000 ms, opzione `WDT_FLAG_RESET_SOC`. Va nutrito (`wdt_feed`) **dall'elaborazione**
    a ogni messaggio ricevuto, perché è il lavoro che dimostra che il nodo funziona.
    Attenzione: la `k_msgq_get` con `K_FOREVER` non ritorna se l'acquisizione si ferma...
@@ -37,8 +38,9 @@ Requisiti coperti: **R10, R11**, N2, N3.
 
 - Quando il nodo si riavvia per il watchdog, Renode ricarica il firmware: la soglia salvata
   nella flash *simulata* si perde (la flash vera la conserverebbe). Annotalo tra i limiti.
-- Il watchdog del nRF52840, una volta avviato, **non si può fermare**: in debug può essere
-  scomodo. Cerca `WDT_OPT_PAUSE_HALTED_BY_DBG`.
+- L'IWDG dell'STM32, una volta avviato, **non si può fermare**: in debug può essere
+  scomodo. Cerca `WDT_OPT_PAUSE_HALTED_BY_DBG` (e non usare `WDT_OPT_PAUSE_IN_SLEEP`: il
+  driver la rifiuta con `-ENOTSUP`, teoria 07 sezione 10).
 - Le stringhe `ERRORE SENSORE` / `SENSORE OK` devono comparire esattamente così: la verifica
   le cerca.
 

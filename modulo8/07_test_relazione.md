@@ -74,7 +74,8 @@ la pressione del pulsante all'elaborazione.)
 
 ## 7. Limiti
 (Cosa non funziona o non è verificato. Cosa cambierebbe sulla scheda vera: flash simulata,
-rimbalzi reali del pulsante, tempi reali, sensore vero.)
+rimbalzi reali del pulsante, tempi reali, sensore vero sul bus `i2c1` invece di quello
+emulato da Zephyr.)
 
 ## 8. Cosa ho imparato
 (Su C embedded, RTOS, microcontrollori: le tre cose più importanti e la più difficile.)
@@ -89,5 +90,5 @@ rimbalzi reali del pulsante, tempi reali, sensore vero.)
 ## Domande finali (rispondi nella relazione)
 
 1. Quale bug hai trovato grazie ai test e che altrimenti sarebbe arrivato "sulla scheda"?
-2. Se dovessi portare il nodo su una scheda vera con un altro sensore di temperatura, quali
-   file cambieresti? Quali restano identici?
+2. Se dovessi portare il nodo su una STM32F4 Discovery vera, con un altro sensore di
+   temperatura (per esempio un BME280), quali file cambieresti? Quali restano identici?

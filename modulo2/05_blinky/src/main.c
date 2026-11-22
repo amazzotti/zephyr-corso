@@ -22,8 +22,8 @@
  *      - accende il LED con gpio_pin_set_dt(&led, 1), stampa "LED acceso",
  *        aspetta 1000 ms con k_msleep(1000);
  *      - spegne con gpio_pin_set_dt(&led, 0), stampa "LED spento", aspetta 1000 ms.
- * 5. In Renode, mentre gira, scrivi nel monitor:  sysbus.gpio0.led0 State
- *    piu' volte: vedi True e False alternarsi.
+ * 5. In Renode, mentre gira, scrivi nel monitor:  sysbus.gpioPortD.led0 State
+ *    piu' volte: vedi True e False alternarsi (led0 e' il LED verde, pin PD12).
  * 6. Lancia la verifica.
  *
  * OUTPUT ATTESO
@@ -36,10 +36,13 @@
  * - Driver e dispositivo: la porta GPIO e' un "device" gestito da un driver che
  *   Zephyr inizializza prima di main(). gpio_is_ready_dt controlla che sia andata bene.
  * - gpio_dt_spec: porta + pin + flag, tutto dal devicetree. Il codice non contiene
- *   "pin 13": cambiando scheda (o overlay) lo stesso codice funziona.
- * - Valore logico contro livello elettrico: il LED e' attivo basso, ma con le
- *   funzioni _dt scrivi 1 = acceso. Sotto, il driver scrive 0 nel bit 13 del
- *   registro OUT della porta gpio0.
+ *   "porta D, pin 12": cambiando scheda (o overlay) lo stesso codice funziona.
+ * - Valore logico contro livello elettrico: con le funzioni _dt scrivi 1 = acceso.
+ *   Sulla Discovery il LED e' attivo alto, quindi il driver scrive 1 nel bit 12 del
+ *   registro ODR della porta GPIO D (tramite il registro BSRR). Su una scheda con LED
+ *   attivo basso il flag GPIO_ACTIVE_LOW del devicetree fa scrivere 0, e il tuo
+ *   codice non cambia.
+ * - CONFIG_GPIO=y in prj.conf: su questa scheda il driver GPIO non e' attivo di default.
  * - Codici di ritorno: 0 = ok, negativo = errore (convenzione di tutto Zephyr).
  * - while (1): il ciclo infinito di ogni firmware.
  *

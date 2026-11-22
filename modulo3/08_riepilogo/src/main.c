@@ -25,7 +25,8 @@
  *        altrimenti "... : no" (usa una variabile "prima_volta");
  *      - ricomincia.
  * 5. In main() stampa "Avvio 4 thread LED" e ritorna.
- * 6. Esegui. In Renode guarda i LED con  sysbus.gpio0.led0 State ... led3 State.
+ * 6. Esegui. In Renode guarda i LED con  sysbus.gpioPortD.led0 State ... led3 State
+ *    (verde, arancione, rosso, blu: PD12..PD15).
  *    Dopo 2 secondi L0 dovrebbe aver cambiato stato circa 8 volte, L3 circa 2.
  * 7. Lancia la verifica.
  *

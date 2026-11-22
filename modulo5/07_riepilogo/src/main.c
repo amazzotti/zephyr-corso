@@ -6,11 +6,11 @@
  *
  * OBIETTIVO
  * Due funzioni tipiche di un firmware vero:
- * - un LED di "battito" (heartbeat): led0 cambia stato ogni 500 ms, comandato da un
+ * - un LED di "battito" (heartbeat): led0 (verde, PD12) cambia stato ogni 500 ms, comandato da un
  *   k_timer. Se smette di lampeggiare, il firmware e' bloccato.
  * - un SUPERVISORE: due thread di lavoro ("acquisizione" e "comunicazione") devono dare
  *   un segno di vita almeno ogni 3 secondi. Se uno smette, il supervisore stampa quale
- *   e accende led1 (allarme).
+ *   e accende led1 (arancione, PD13: allarme).
  * Il thread "comunicazione" dopo 5 cicli si blocca apposta.
  *
  * PASSI
@@ -45,7 +45,7 @@
  *     SUPERVISORE: thread 'comunicazione' bloccato   (3 s dopo l'ultimo segno di vita:
  *     Acquisizione: ciclo 8                           puo' comparire prima o dopo il ciclo 8)
  *     ...
- * In Renode: led0 cambia stato ogni 500 ms (prova "sysbus.gpio0.led0 State" piu' volte),
+ * In Renode: led0 cambia stato ogni 500 ms (prova "sysbus.gpioPortD.led0 State" piu' volte),
  * led1 si accende con l'allarme.
  *
  * CONCETTI NUOVI

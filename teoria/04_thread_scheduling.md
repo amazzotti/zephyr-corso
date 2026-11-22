@@ -116,15 +116,17 @@ Solo i thread **pronti** competono per la CPU. Un thread in attesa non consuma C
 | consumo | la CPU può dormire | la CPU lavora inutilmente |
 | quando si usa | quasi sempre | attese brevissime (microsecondi) richieste dall'hardware |
 
-**Il tempo del kernel.** Sull'nRF52840 il tempo lo misura una periferica **RTC** alimentata
-da un quarzo a 32 768 Hz. Funzioni utili:
+**Il tempo del kernel.** Sullo STM32F4 il tempo lo misura il **SysTick**, un timer a 24 bit
+integrato in ogni core Cortex-M, che conta i cicli del clock della CPU (168 MHz). Funzioni
+utili:
 - `k_uptime_get()`: millisecondi dall'avvio (`int64_t`);
-- `k_cycle_get_32()`: il contatore hardware grezzo (qui a 32 768 cicli al secondo, dato da
-  `sys_clock_hw_cycles_per_sec()`);
+- `k_cycle_get_32()`: il contatore hardware grezzo (qui 168 000 000 cicli al secondo, dato
+  da `sys_clock_hw_cycles_per_sec()`; un contatore a 32 bit riparte da 0 ogni ~25,6 s);
 - `k_cyc_to_us_floor32(cicli)`: conversione in microsecondi.
 
-Zephyr è *tickless*: non c'è un interrupt periodico continuo; il kernel programma l'RTC per
-svegliarsi esattamente alla prossima scadenza. Meno interrupt, meno consumo.
+Zephyr è *tickless*: non c'è un interrupt periodico fisso; il kernel riprogramma il SysTick
+per svegliarsi alla prossima scadenza (il tick, `CONFIG_SYS_CLOCK_TICKS_PER_SEC` = 10 000
+qui, resta l'unità di misura dei tempi). Meno interrupt, meno consumo.
 
 ## 7. Thread creati a runtime e parametri
 
@@ -184,7 +186,7 @@ indirizzi bassi  └──────────────────┘ fi
 In un microcontrollore non c'è memoria virtuale che "si allarga": ogni stack ha una
 dimensione **fissa** decisa in compilazione. Troppo piccolo → **stack overflow**: il thread
 scrive sulla memoria di qualcun altro, con effetti casuali e difficili da capire.
-Troppo grande → RAM sprecata (sono solo 256 KB per tutto).
+Troppo grande → RAM sprecata (sono solo 128 KB di RAM principale per tutto).
 
 Come si dimensiona: si parte largo, si **misura** l'uso reale con il **thread analyzer**
 (`CONFIG_THREAD_ANALYZER=y`, che riempie lo stack di un valore noto all'avvio e poi conta

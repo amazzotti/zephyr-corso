@@ -5,17 +5,25 @@
 Un **microcontrollore** (MCU, *microcontroller unit*) è un piccolo computer completo in un
 solo chip:
 
-| Parte | Nel nRF52840 | A cosa serve |
+Il corso usa la scheda **STM32F4 Discovery** (di ST Microelectronics), con il
+microcontrollore **STM32F407VG**. Gli STM32 sono la famiglia di microcontrollori più diffusa
+nell'industria.
+
+| Parte | Nello STM32F407VG | A cosa serve |
 |---|---|---|
-| CPU | ARM Cortex-M4F a 64 MHz | esegue le istruzioni |
-| Flash | 1 MB, da indirizzo `0x00000000` | contiene il programma (il **firmware**) e le costanti; non si cancella spegnendo |
-| RAM | 256 KB, da indirizzo `0x20000000` | variabili, stack; si perde spegnendo |
-| Periferiche | GPIO, UART, I2C, SPI, timer, RTC, watchdog, radio... | parlano con il mondo esterno |
+| CPU | ARM Cortex-M4F a 168 MHz (con unità per i numeri con la virgola, la "F") | esegue le istruzioni |
+| Flash | 1 MB, da indirizzo `0x08000000` | contiene il programma (il **firmware**) e le costanti; non si cancella spegnendo |
+| RAM | 128 KB, da indirizzo `0x20000000` (+ 64 KB di RAM "CCM" a `0x10000000`) | variabili, stack; si perde spegnendo |
+| Periferiche | GPIO, USART, I2C, SPI, timer, RTC, watchdog, ADC, USB, CAN... | parlano con il mondo esterno |
+
+Sulla scheda ci sono anche 4 LED (verde, arancione, rosso, blu, sui pin PD12-PD15) e un
+pulsante utente blu (pin PA0). Il nome di un pin STM32 si legge così: **P**orta **D**,
+pin **12** = PD12. Ogni porta (A, B, C, D, E...) ha 16 pin.
 
 Differenze rispetto al PC su cui hai fatto il corso di Python:
 - niente sistema operativo "grande", niente file, niente schermo: l'unico modo per "vedere"
   qualcosa è una **UART** (porta seriale) o un LED;
-- memoria piccolissima: 256 KB di RAM contro i GB del PC;
+- memoria piccolissima: 128 KB di RAM contro i GB del PC;
 - il programma parte all'accensione e **non finisce mai**;
 - le periferiche si comandano scrivendo in **registri**, cioè indirizzi di memoria speciali
   (lo vedrai nel Modulo 1).
@@ -82,7 +90,7 @@ C:\zephyrproject\
   .venv\          ambiente virtuale Python con west (come nel corso ML)
   .west\          configurazione di west
   zephyr\         il kernel, i driver, le board, gli esempi (ZEPHYR_BASE)
-  modules\        librerie esterne (es. hal_nordic: i file del costruttore del chip)
+  modules\        librerie esterne (es. hal\stm32: i file del costruttore del chip)
   bootloader\, tools\ ...
 ```
 
@@ -110,10 +118,11 @@ target_sources(app PRIVATE src/main.c)                   # i miei sorgenti
 Compilazione (lo fa `esegui.ps1` per te):
 
 ```powershell
-west build -b nrf52840dk/nrf52840 -d modulo0\02_hello\build modulo0\02_hello --no-sysbuild
+west build -b stm32f4_disco -d modulo0\02_hello\build modulo0\02_hello --no-sysbuild
 ```
 
-- `-b` sceglie la **board**: `nrf52840dk` è la scheda, `nrf52840` il chip (SoC);
+- `-b` sceglie la **board**: `stm32f4_disco` è la STM32F4 Discovery (il chip, lo
+  STM32F407, Zephyr lo ricava dalla board);
 - `-d` la cartella dove finiscono i file generati;
 - il risultato è `build/zephyr/zephyr.elf`.
 
@@ -122,8 +131,9 @@ che hai cambiato.
 
 ## 7. Cosa succede all'accensione
 
-1. La CPU legge dalla flash, all'indirizzo 0, la **tabella dei vettori**: il valore iniziale
-   dello stack e l'indirizzo della prima istruzione (*reset handler*).
+1. La CPU legge dall'inizio della flash (`0x08000000`; all'avvio lo STM32 la rende visibile
+   anche all'indirizzo 0) la **tabella dei vettori**: il valore iniziale dello stack e
+   l'indirizzo della prima istruzione (*reset handler*).
 2. Il codice di avvio copia le variabili inizializzate da flash a RAM, azzera le altre
    (vedrai il perché nel Modulo 1).
 3. Zephyr inizializza il kernel e i driver, nell'ordine stabilito dal devicetree.
@@ -136,8 +146,10 @@ thread (se ci sono) continuano. Per questo un firmware "finisce" solo se lo speg
 ## 8. UART, console e printk
 
 La **UART** è la periferica più semplice per comunicare: due fili (TX e RX) su cui i byte
-viaggiano uno alla volta a una velocità prefissata (115200 bit/s). Sulla scheda vera la UART
-arriva al PC tramite USB; in Renode si vede in una finestra (*analyzer*).
+viaggiano uno alla volta a una velocità prefissata (115200 bit/s). Sugli STM32 si chiama
+**USART** (la "S" indica che sa fare anche la modalità sincrona): la console di Zephyr sulla
+Discovery è la `usart2`, sui pin PA2 (TX) e PA3 (RX). Sulla scheda vera la si collega al PC
+con un adattatore USB-seriale; in Renode si vede in una finestra (*analyzer*).
 
 Zephyr usa una UART come **console**: `printk("x = %d\n", x);` stampa lì. `printk` è come il
 `print` di Python con le f-string scritte alla vecchia maniera del C (formato + valori).
@@ -149,7 +161,8 @@ andrebbe sulla scheda vera, e simula CPU, memoria e periferiche (UART, GPIO, tim
 
 Ha un **monitor**: una console dove dai comandi al simulatore (avviare, fermare, leggere la
 memoria, premere un pulsante, guardare un LED). La scheda del corso è descritta in
-`renode/nrf52840dk.repl`; lo script `renode/esercizio.resc` la crea e carica il firmware.
+`renode/stm32f4_disco.repl`; lo script `renode/esercizio.resc` la crea e carica il firmware.
+Il prompt del monitor è `(stm32f4)`.
 
 Comandi base del monitor:
 
@@ -158,9 +171,10 @@ Comandi base del monitor:
 | `start` / `pause` | avvia / ferma l'emulazione |
 | `machine Reset` | riparte da capo (ricarica il firmware) |
 | `peripherals` | elenca le periferiche della scheda |
-| `sysbus.gpio0.led0 State` | stato del LED 0 |
-| `sysbus.gpio0.sw0 Press` / `Release` | preme / rilascia il pulsante 0 |
-| `sysbus ReadDoubleWord 0x20000000` | legge 4 byte di memoria |
+| `sysbus.gpioPortD.led0 State` | stato del LED verde (`led0`, PD12): `True` = acceso |
+| `sysbus.gpioPortA.sw0 Press` / `Release` | preme / rilascia il pulsante utente (`sw0`, PA0) |
+| `sysbus.gpioPortA.sw0 Pressed` | dice se il pulsante è premuto |
+| `sysbus ReadDoubleWord 0x20000000` | legge 4 byte di memoria (o di un registro) |
 | `cpu PC` | indirizzo dell'istruzione corrente |
 | `help` | aiuto; `help <periferica>` o il solo nome mostra i comandi |
 | `quit` | chiude Renode |

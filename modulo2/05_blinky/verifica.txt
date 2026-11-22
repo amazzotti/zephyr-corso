@@ -1,10 +1,10 @@
 # Verifica dell'esercizio modulo2/05_blinky
 # Dopo ogni riga il LED resta in quello stato per 1 secondo: c'e' tempo per controllarlo.
 attendi: ^LED acceso$
-controlla: sysbus.gpio0.led0 State => True
+controlla: sysbus.gpioPortD.led0 State => True
 attendi: ^LED spento$
-controlla: sysbus.gpio0.led0 State => False
+controlla: sysbus.gpioPortD.led0 State => False
 attendi: ^LED acceso$
-controlla: sysbus.gpio0.led0 State => True
+controlla: sysbus.gpioPortD.led0 State => True
 attendi: ^LED spento$
-controlla: sysbus.gpio0.led0 State => False
+controlla: sysbus.gpioPortD.led0 State => False

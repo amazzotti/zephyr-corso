@@ -2,12 +2,12 @@
 attendi 15: uart:~\$
 scrivi: led on
 attendi: LED acceso
-controlla: sysbus.gpio0.led0 State => True
+controlla: sysbus.gpioPortD.led0 State => True
 scrivi: led stato
 attendi: LED: acceso
 scrivi: led off
 attendi: LED spento
-controlla: sysbus.gpio0.led0 State => False
+controlla: sysbus.gpioPortD.led0 State => False
 scrivi: conta
 attendi: conta = 1
 scrivi: conta

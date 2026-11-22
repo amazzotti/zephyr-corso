@@ -1,7 +1,8 @@
 # Verifica dell'esercizio modulo2/04_devicetree_lettura
 attendi: ^Velocita console: 115200$
-attendi: ^Indirizzo uart0: 0x40002000$
-attendi: ^LED0 sul pin: 13$
+attendi: ^Indirizzo usart2: 0x40004400$
+attendi: ^LED0 sul pin: 12$
 attendi: ^Flash: 1048576 byte$
-attendi: ^RAM: 262144 byte$
-attendi: ^Indirizzo i2c0: 0x40003000$
+attendi: ^Flash da: 0x08000000$
+attendi: ^RAM: 131072 byte$
+attendi: ^Indirizzo i2c1: 0x40005400$

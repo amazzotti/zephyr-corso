@@ -1,25 +1,25 @@
 # Verifica completa del progetto (passo 7)
 # Uso: .\verifica.ps1 modulo8\progetto -File modulo8\verifiche\07_completa.txt
-monitor: sysbus.twi0.bme280 Temperature 22
 attendi: NODO AVVIATO
-attendi 15: uart:~\$
+scrivi: sim temp 2200
+attendi: sim: temperatura 22\.00 C
 pausa: 3000
 # R8, R9: soglia dalla shell
 scrivi: soglia set 25
 attendi: Soglia impostata: 25\.00 C \(salvata\)
 # R3, R4: allarme con la nuova soglia
-monitor: sysbus.twi0.bme280 Temperature 27
+scrivi: sim temp 2700
 attendi 30: ALLARME ATTIVO \(media \d+\.\d\d >= soglia 25\.00\)
-controlla: sysbus.gpio0.led0 State => True
+controlla: sysbus.gpioPortD.led2 State => True
 # R6: conferma con il pulsante
-monitor: sysbus.gpio0.sw0 Press
+monitor: sysbus.gpioPortA.sw0 Press
 attendi 5: ALLARME CONFERMATO
-monitor: sysbus.gpio0.sw0 Release
-controlla: sysbus.gpio0.led0 State => False
+monitor: sysbus.gpioPortA.sw0 Release
+controlla: sysbus.gpioPortD.led2 State => False
 scrivi: stato
 attendi: Allarme: CONFERMATO
 # R5: rientro sotto soglia - isteresi
-monitor: sysbus.twi0.bme280 Temperature 20
+scrivi: sim temp 2000
 attendi 30: ALLARME RIENTRATO
 scrivi: stato
 attendi: Allarme: NO

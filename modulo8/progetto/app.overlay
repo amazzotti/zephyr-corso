@@ -4,20 +4,22 @@
  * - alias con nomi "di progetto" per LED e pulsante: nel codice usa
  *   DT_ALIAS(led_allarme), DT_ALIAS(led_battito), DT_ALIAS(pulsante_conferma)
  *   (nel devicetree il trattino diventa underscore nelle macro).
- * - il sensore Bosch BME280 (bus i2c0 = twi0 in Renode, indirizzo 0x76) NON ha un nodo
- *   qui: lo comanda il tuo driver bme280_corso.c (Modulo 6, esercizio 7), che usa
- *   direttamente il bus i2c0, gia' attivo sulla nrf52840dk. Un nodo "bosch,bme280"
- *   attiverebbe il driver ufficiale di Zephyr, che in Renode non funziona
- *   (teoria/07_periferiche_driver.md, sezione 7).
- * - flash simulata in RAM per i settings (vedi modulo7/07_settings/app.overlay):
- *   Renode non simula il controller della flash del nRF52840.
+ *     led-allarme       = LED rosso (PD14, led2)
+ *     led-battito       = LED verde (PD12, led0)
+ *     pulsante-conferma = pulsante utente blu (PA0, sw0)
+ * - il sensore di temperatura (ADT7420, nodo "sensore") NON e' qui: lo aggiunge
+ *   comune/sensore_sim.overlay, incluso dal CMakeLists.txt. Nel codice:
+ *   DEVICE_DT_GET(DT_NODELABEL(sensore)) e la sensor API.
+ * - watchdog indipendente IWDG attivato, con l'alias standard watchdog0.
+ * - flash simulata in RAM per i settings (vedi modulo7/07_settings/app.overlay).
  */
 
 / {
 	aliases {
-		led-allarme = &led0;
-		led-battito = &led1;
-		pulsante-conferma = &button0;
+		led-allarme = &red_led_5;
+		led-battito = &green_led_4;
+		pulsante-conferma = &user_button;
+		watchdog0 = &iwdg;
 	};
 
 	sim_flash_controller: sim_flash_controller {
@@ -48,4 +50,8 @@
 	chosen {
 		zephyr,settings-partition = &storage_sim;
 	};
+};
+
+&iwdg {
+	status = "okay";
 };

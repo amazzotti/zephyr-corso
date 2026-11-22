@@ -71,7 +71,8 @@
  * DOMANDE (rispondi qui, dentro il commento)
  * 1. Quanti thread sono in esecuzione e come si chiamano?
  * 2. Quanto stack usa al massimo il thread della shell? Su quanto disponibile?
- * 3. Quali dispositivi elenca "device list"? Riconosci gpio0, uart0, i2c0?
+ * 3. Quali dispositivi elenca "device list"? Riconosci gpioa..gpiod, usart2,
+ *    i2c1? (Confronta gli indirizzi, es. gpio@40020c00 = GPIOD, con CORSO.md sezione 3.)
  * 4. Dopo "log disable app" il thread battito continua a girare? Come lo verifichi?
  *
  * Scrivi il tuo codice qui sotto.

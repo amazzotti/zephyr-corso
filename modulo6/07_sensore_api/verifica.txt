@@ -1,0 +1,13 @@
+# Verifica dell'esercizio modulo6/07_sensore_api
+# Le righe possono iniziare con il prompt "uart:~$ " della shell: niente ^ nelle regex.
+attendi: Booting Zephyr OS
+attendi: Sensore: adt7420@48
+attendi: Temperatura: 22\.50 C
+scrivi: sim temp 3550
+attendi: sim: temperatura 35\.50 C
+attendi: Temperatura: 35\.50 C
+scrivi: sim temp -525
+attendi: sim: temperatura -5\.25 C
+attendi: Temperatura: -5\.25 C
+mai: Temperatura: -5\.-25
+mai: Errore

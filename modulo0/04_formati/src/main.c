@@ -35,7 +35,7 @@
  *    Il cast (uint32_t) serve perche' %u vuole un numero a 32 bit e t e' a 64.
  * 5. Stampa l'indirizzo in memoria della variabile "testo" con %p:
  *        Indirizzo di testo: 0x...
- *    E' in flash (0x000.....) o in RAM (0x2000....)? Ci torniamo nel Modulo 1.
+ *    E' in flash (0x08......) o in RAM (0x2000....)? Ci torniamo nel Modulo 1.
  *
  * OUTPUT ATTESO (le ultime righe dipendono dalla versione e dal momento)
  *     Intero: -42
@@ -47,7 +47,8 @@
  *     Somma: 7 + 5 = 12
  *     Versione kernel: 4.2.0
  *     Uptime: 3 ms
- *     Indirizzo di testo: 0x0000xxxx
+ *     Indirizzo di testo: 0x80.....
+ * (%p non mette gli zeri davanti: 0x8003b0a e' l'indirizzo 0x08003B0A)
  *
  * CONCETTI NUOVI
  * - Specificatori di formato: dicono a printk COME interpretare il valore passato.

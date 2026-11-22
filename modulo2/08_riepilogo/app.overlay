@@ -1,5 +1,9 @@
 /*
- * TODO: aggiungi l'alias "lampeggio" che punta al LED 1 (etichetta led1).
+ * TODO: aggiungi l'alias "lampeggio" che punta al LED arancione (etichetta orange_led_3,
+ * pin PD13, e' il LED dell'alias led1).
+ *
+ * Etichette dei LED della stm32f4_disco: green_led_4 (PD12), orange_led_3 (PD13),
+ * red_led_5 (PD14), blue_led_6 (PD15).
  */
 
 / {

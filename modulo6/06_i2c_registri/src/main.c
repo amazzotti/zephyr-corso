@@ -1,102 +1,96 @@
 /*
- * Esercizio 6 (Modulo 6) - I2C a basso livello
+ * Esercizio 6 (Modulo 6) - I2C a basso livello: i registri del sensore
  *
- * Teoria: teoria/07_periferiche_driver.md, sezioni 7 e 8 (e il riquadro
- *         "Limite di Renode" nella sezione 7);
- *         teoria/02_c_embedded.md (operatori sui bit, tipi con segno).
+ * Teoria: teoria/07_periferiche_driver.md, sezioni 7 e 8.
  *
  * OBIETTIVO
- * Parlare con il sensore BME280 direttamente sul bus I2C, come farebbe un driver:
- * leggere il registro di identificazione, poi i primi coefficienti di calibrazione,
- * e ricomporli da byte a numeri a 16 bit.
+ * Parlare con un sensore di temperatura I2C (Analog Devices ADT7420, indirizzo 0x48)
+ * leggendo direttamente i suoi registri: l'identificativo, la configurazione e la
+ * temperatura grezza, che poi converti tu in gradi. Niente driver: solo bus I2C.
+ *
+ * Il sensore e' simulato da Zephyr (cartella comune/, vedi CORSO.md sezione 3): per il
+ * tuo codice e' un normale dispositivo I2C. La temperatura parte da 22.50 C e si cambia
+ * scrivendo nella console  sim temp 3550  (centesimi di grado).
  *
  * PASSI
- * 1. Prendi il device del bus e definisci l'indirizzo del sensore:
- *        static const struct device *bus = DEVICE_DT_GET(DT_NODELABEL(i2c0));
- *        #define BME280_ADDR 0x76
- *    In main() controlla device_is_ready(bus) ("Errore: bus I2C non pronto") e stampa
- *        "Bus %s, indirizzo 0x%02x"   con bus->name e BME280_ADDR.
- *    (Il bus i2c0 e' gia' attivo nel devicetree della nrf52840dk: niente overlay.)
- * 2. Scrivi la funzione di aiuto
+ * 1. Prendi bus + indirizzo dal devicetree, in un solo oggetto:
+ *        static const struct i2c_dt_spec sens = I2C_DT_SPEC_GET(DT_NODELABEL(sensore));
+ *    e controlla i2c_is_ready_dt(&sens) ("Errore: bus I2C non pronto").
+ *    Cerca "sensore" in build/zephyr/zephyr.dts: sotto quale bus sta? Che "reg" ha?
+ * 2. Scrivi una funzione che legge uno o piu' registri consecutivi:
  *        static int leggi_registri(uint8_t reg, uint8_t *buf, size_t n)
- *    che legge n registri consecutivi a partire da "reg" in DUE transazioni:
- *        - i2c_write(bus, &reg, 1, BME280_ADDR)   -> dice al sensore da che registro partire
- *        - i2c_read(bus, buf, n, BME280_ADDR)     -> legge n byte da li' in avanti
- *    Se una delle due restituisce un valore negativo, restituiscilo subito; altrimenti 0.
- *    LIMITE DI RENODE: sulla scheda vera si userebbe una sola chiamata,
- *        i2c_write_read(bus, BME280_ADDR, &reg, 1, buf, n)   (o i2c_burst_read),
- *    che fa scrittura e lettura nella STESSA transazione, con un "repeated start" al posto
- *    dello STOP in mezzo. Il modello I2C del simulatore non gestisce il repeated start
- *    (restituisce dati sbagliati senza errori!), mentre gestisce bene due transazioni
- *    separate. Il BME280 accetta entrambe le forme.
- * 3. Leggi 1 byte dal registro 0xD0. Se leggi_registri restituisce un valore negativo
- *    stampa "Errore I2C: %d" (significa: nessun ACK, il sensore non risponde a
- *    quell'indirizzo) e termina. Altrimenti stampa "ID chip: 0x%02x".
- *    Se id == 0x60 stampa "BME280 trovato", altrimenti "Chip sconosciuto".
- * 4. Leggi 6 byte a partire dal registro 0x88 in un colpo solo:
- *        uint8_t cal[6];
- *        leggi_registri(0x88, cal, sizeof(cal));
- *    Stampali in esadecimale su una riga ("Calibrazione: 00 80 ...").
- * 5. Ricomponi i coefficienti (little-endian: prima il byte basso):
- *        uint16_t dig_T1 = cal[0] | (cal[1] << 8);
- *        int16_t  dig_T2 = ...  (byte 2 e 3)
- *        int16_t  dig_T3 = ...  (byte 4 e 5)
- *    e stampa "dig_T1 = %u, dig_T2 = %d, dig_T3 = %d".
- * 6. Cambia BME280_ADDR in 0x77, ricompila ed esegui: cosa succede al passo 3?
- *    Rimetti 0x76.
+ *        {
+ *            return i2c_write_read_dt(&sens, &reg, 1, buf, n);
+ *        }
+ *    i2c_write_read_dt fa in una sola transazione: START, indirizzo + scrittura, numero
+ *    del registro, RESTART (repeated start), indirizzo + lettura, n byte, STOP.
+ * 3. Leggi il registro 0x0B (ID) e stampa  "ID: 0x%02x"  -> deve valere 0xcb.
+ *    Se la funzione restituisce un errore stampa "Errore I2C: %d" e termina.
+ * 4. Leggi il registro 0x03 (configurazione) e stampa  "Configurazione: 0x%02x".
+ *    Con la tabella della teoria (sezione 8): che risoluzione e che modo di
+ *    funzionamento indica?
+ * 5. Ogni secondo, in un ciclo:
+ *      - leggi 2 byte dal registro 0x00 (temperatura: MSB poi LSB);
+ *      - ricomponi il valore a 16 bit: (msb << 8) | lsb, in un int16_t (ha il segno!);
+ *      - i 13 bit utili stanno nei bit 15..3: grezzo = valore >> 3;
+ *      - ogni unita' vale 0,0625 C = 1/16 C. In centesimi di grado, senza float:
+ *            centesimi = grezzo * 25 / 4;     (perche'? 100/16 = 25/4)
+ *      - stampa  "Grezzo: %d -> %d.%02d C"  (attenzione ai negativi, bonus).
+ * 6. Esegui, poi nella finestra della UART scrivi  sim temp 3550  e guarda cambiare i
+ *    valori. Prova anche  sim temp 2000.
  *
- * OUTPUT ATTESO (valori del sensore simulato da Renode: i coefficienti di un BME280 vero
- * sono diversi per ogni esemplare)
- *     Bus i2c@40003000, indirizzo 0x76
- *     ID chip: 0x60
- *     BME280 trovato
- *     Calibrazione: 00 80 00 80 00 00
- *     dig_T1 = 32768, dig_T2 = -32768, dig_T3 = 0
+ * OUTPUT ATTESO
+ *     ID: 0xcb
+ *     Configurazione: 0x00
+ *     Grezzo: 360 -> 22.50 C
+ *     Grezzo: 360 -> 22.50 C
+ *     sim: temperatura 35.50 C            (dopo "sim temp 3550")
+ *     Grezzo: 568 -> 35.50 C
+ * (Le righe possono iniziare con il prompt "uart:~$ " della shell: e' normale.)
  *
  * CONCETTI NUOVI
- * - Device di un bus: DEVICE_DT_GET(DT_NODELABEL(i2c0)); il dispositivo sul bus si
- *   identifica con il suo indirizzo a 7 bit.
- * - Registro di un dispositivo: "scrivo il numero del registro, poi leggo".
- * - Lettura a raffica (burst): il sensore avanza da solo al registro successivo.
- * - ACK/NACK: se nessuno risponde all'indirizzo la funzione restituisce un errore.
- * - Little-endian e ricomposizione di numeri da byte; con segno contro senza segno.
- * - Repeated start (teoria, sezione 7): perche' esiste e perche' qui non lo usiamo.
+ * - Indirizzo I2C a 7 bit del dispositivo (0x48) e "registri" del dispositivo:
+ *   si scrive il numero del registro, poi si legge.
+ * - Repeated start: scrittura e lettura nella stessa transazione, senza STOP in mezzo.
+ * - Big-endian: l'ADT7420 manda prima il byte ALTO (MSB). Ricomporre a mano i byte.
+ * - Complemento a due e shift a destra di un numero con segno (Modulo 1).
+ * - Virgola fissa: centesimi di grado come intero.
  *
  * COME VERIFICARE DA SOLO
  *     .\verifica.ps1 modulo6\06_i2c_registri
+ * La verifica controlla ID, temperatura iniziale e temperatura dopo "sim temp 3550".
  *
  * ERRORI TIPICI
- * - Usare i2c_write_read o i2c_reg_read_byte: in Renode leggi valori sbagliati (per
- *   esempio un ID diverso da 0x60) SENZA errori. Vedi il riquadro al passo 2.
- * - Passare a i2c_write il valore del registro invece del suo indirizzo: e' &reg, un
- *   puntatore al buffer da trasmettere (lungo 1 byte).
- * - Ricomporre al contrario (cal[0] << 8 | cal[1]): big-endian, valori assurdi.
- * - dig_T2 come uint16_t: i valori negativi diventano numeri enormi (32768 invece di
- *   -32768).
- * - Dimenticare le parentesi: cal[0] | cal[1] << 8 funziona, ma (cal[0] | cal[1]) << 8 no.
+ * - Ricomporre i byte al contrario (lsb << 8 | msb): con 22.50 C esce un numero enorme.
+ * - Usare uint16_t: con temperature negative il valore diventa sbagliato (bonus).
+ * - Dimenticare lo shift di 3 bit: 22.50 C diventa 180.00 C.
+ * - Calcolare 25/4 prima della moltiplicazione: in intero 25/4 = 6, e si perdono i
+ *   decimali. Prima moltiplica, poi dividi.
  *
  * BONUS (facoltativo)
- * - Nel monitor di Renode scrivi  logLevel 0 sysbus.twi0  e riesegui: vedi le due
- *   transazioni (scrittura del registro, poi lettura) sul bus?
- * - Prova una volta i2c_write_read al posto delle due chiamate e confronta l'ID letto:
- *   e' il modo migliore per ricordarti del limite del simulatore.
- * - Una misura vera la fai nell'esercizio 7, dove scrivi un piccolo driver completo.
+ * - Temperature negative: sim temp -525 deve stampare "Grezzo: -84 -> -5.25 C".
+ *   Attenzione a "-0.50": gradi = 0 ma il numero e' negativo. Scrivi una funzione
+ *   stampa_c100(int32_t c100) che gestisce il segno a parte.
+ * - Prova un indirizzo sbagliato (0x49 al posto di 0x48, con una i2c_dt_spec scritta a
+ *   mano): che errore restituisce i2c_write_read_dt? Cosa succede sul bus (NACK)?
+ * - Leggi lo stato (registro 0x02): cosa indica il bit 7 (RDY)?
  *
  * Scrivi il tuo codice qui sotto.
  */
 
 #include <zephyr/kernel.h>
-#include <zephyr/device.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/sys/printk.h>
 
-/* TODO: device del bus e indirizzo del sensore (passo 1) */
+#define REG_TEMP_MSB 0x00
+#define REG_CONFIG   0x03
+#define REG_ID       0x0B
 
-/* TODO: static int leggi_registri(uint8_t reg, uint8_t *buf, size_t n)  (passo 2) */
+/* TODO: i2c_dt_spec del sensore e funzione leggi_registri (passi 1-2) */
 
 int main(void)
 {
-	/* TODO: lettura dell'ID e della calibrazione (passi 1, 3-5) */
+	/* TODO: ID, configurazione e ciclo di lettura della temperatura (passi 3-5) */
 
 	return 0;
 }

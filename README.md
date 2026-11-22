@@ -1,11 +1,12 @@
 # zephyr-corso
 
 Percorso personale di apprendimento di **Zephyr RTOS** senza hardware: tutto gira su una
-scheda **nRF52840 DK simulata con [Renode](https://renode.io)**.
+scheda **STM32F4 Discovery simulata con [Renode](https://renode.io)**, con un sensore di
+temperatura I2C emulato da Zephyr.
 
 Si parte dal setup e dal C per l'embedded, poi build system (Kconfig, devicetree), thread,
-sincronizzazione, timer, periferiche (GPIO, UART, I2C, watchdog), shell, test e debug,
-fino a un progetto finale: un **nodo di monitoraggio della temperatura**.
+sincronizzazione, timer, periferiche (GPIO con interrupt, UART, I2C, watchdog), shell, test
+e debug, fino a un progetto finale: un **nodo di monitoraggio della temperatura**.
 
 - Piano, metodo e stato di avanzamento: [CORSO.md](CORSO.md)
 - Appunti di teoria: [teoria/](teoria/)

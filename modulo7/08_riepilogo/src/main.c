@@ -29,7 +29,7 @@
  *        shell_error(sh, "valore non valido: %s (ammessi 50..5000)", argv[1]);
  *    Dopo ogni modifica salva con settings_save_one e conferma.
  * 5. Prova a mano con esegui.ps1: cambia periodo, guarda il LED nel monitor
- *    (sysbus.gpio0.led0 State piu' volte).
+ *    (sysbus.gpioPortD.led0 State piu' volte).
  *
  * OUTPUT ATTESO
  *     [..] <inf> app: Config caricata: periodo 500 ms, attivo 1

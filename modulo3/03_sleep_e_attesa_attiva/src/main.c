@@ -30,9 +30,9 @@
  * 7. Lancia la verifica.
  *
  * OUTPUT ATTESO (i numeri possono variare, tranne lo 0)
- *     Cicli al secondo: 32768
- *     sleep: 100 ms, 3277 cicli, sfondo avanzato di 412345 giri
- *     busy_wait: 100 ms, 3277 cicli, sfondo avanzato di 0 giri
+ *     Cicli al secondo: 168000000
+ *     sleep: 100 ms, 16800000 cicli, sfondo avanzato di 412345 giri
+ *     busy_wait: 100 ms, 16800000 cicli, sfondo avanzato di 0 giri
  *     ... (3 volte)
  *     Fine misure
  *
@@ -41,9 +41,11 @@
  * - k_busy_wait: ciclo che consuma CPU; solo per attese di microsecondi richieste da
  *   un componente hardware.
  * - k_uptime_get(): ms dall'avvio (int64_t). k_cycle_get_32(): contatore hardware a
- *   32 bit (qui l'RTC del nRF52840 a 32768 Hz: 100 ms = 3276,8 cicli).
+ *   32 bit (qui i cicli di clock della CPU, contati con il SysTick a 168 MHz:
+ *   100 ms = 16.800.000 cicli).
  * - La differenza tra due letture di un contatore unsigned funziona anche se nel
- *   frattempo il contatore e' "ripartito da 0" (aritmetica modulo 2^32).
+ *   frattempo il contatore e' "ripartito da 0" (aritmetica modulo 2^32). A 168 MHz
+ *   un contatore a 32 bit riparte da 0 ogni 2^32 / 168e6 = circa 25,6 secondi.
  * - Tempo virtuale: in Renode le durate sono quelle "della scheda"; il numero di giri
  *   dello sfondo dipende dalla velocita' del simulatore.
  *

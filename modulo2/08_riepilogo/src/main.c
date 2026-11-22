@@ -5,7 +5,7 @@
  *
  * OBIETTIVO
  * Mettere insieme gli strumenti del modulo: un LED che lampeggia con
- *   - il LED scelto dal devicetree (alias "lampeggio" nell'overlay -> LED 1),
+ *   - il LED scelto dal devicetree (alias "lampeggio" nell'overlay -> LED arancione),
  *   - il periodo scelto da Kconfig (opzione tua CORSO_PERIODO_MS),
  *   - i messaggi scritti con il logging.
  * Il codice non contiene ne' numeri di pin ne' tempi: solo nomi.
@@ -13,7 +13,7 @@
  * PASSI
  * 1. File Kconfig: definisci CORSO_PERIODO_MS (istruzioni nel file).
  * 2. prj.conf: imposta CONFIG_CORSO_PERIODO_MS=800.
- * 3. app.overlay: alias lampeggio = &led1.
+ * 3. app.overlay: alias lampeggio = &orange_led_3;  (LED arancione, PD13).
  * 4. Nel codice:
  *      - registra il modulo di log "riepilogo" con livello INF;
  *      - crea la gpio_dt_spec da DT_ALIAS(lampeggio);
@@ -22,9 +22,10 @@
  *      - stampa con LOG_INF "Periodo: %d ms" (il valore di Kconfig);
  *      - ciclo infinito: accendi -> LOG_INF("LED acceso") -> k_msleep(periodo)
  *                        spegni  -> LOG_INF("LED spento") -> k_msleep(periodo)
- * 5. Ricompila con -Pulito, esegui, controlla il LED in Renode (sysbus.gpio0.led1 State).
- * 6. Prova a cambiare solo prj.conf (es. 300) o solo l'overlay (&led3): il codice non
- *    cambia. Rimetti 800 e &led1 prima della verifica.
+ * 5. Ricompila con -Pulito, esegui, controlla il LED in Renode
+ *    (sysbus.gpioPortD.led1 State).
+ * 6. Prova a cambiare solo prj.conf (es. 300) o solo l'overlay (&blue_led_6): il
+ *    codice non cambia. Rimetti 800 e &orange_led_3 prima della verifica.
  * 7. Lancia la verifica.
  *
  * OUTPUT ATTESO

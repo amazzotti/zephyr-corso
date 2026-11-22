@@ -16,19 +16,20 @@
  * compilato automaticamente, vedi CMakeLists.txt):
  *     main.c        avvio: prepara l'hardware, avvia i moduli, stampa NODO AVVIATO
  *     misura.h      struct misura (condivisa tra i moduli)
- *     bme280_corso.c/h  il TUO driver del sensore, copiato da modulo6/07_driver_bme280
- *     sensore.c/h   thread di acquisizione (usa bme280_corso)
+ *     sensore.c/h   thread di acquisizione (sensor API, sensore "sensore")
  *     filtro.c/h    media mobile (logica pura, testabile)
  *     allarme.c/h   macchina a stati dell'allarme con isteresi (logica pura, testabile)
  *     elabora.c/h   thread di elaborazione: coda -> filtro -> allarme -> uscite
  *     uscite.c/h    LED (allarme, battito)
- *     pulsante.c/h  pulsante con debounce
+ *     pulsante.c/h  pulsante a interrupt con debounce
  *     comandi.c     comandi della shell
  *     config.c/h    soglie e settings
+ *     formato.c/h   stampa e lettura di numeri in centesimi (logica pura, testabile)
  *
- * Hardware (app.overlay): alias led_allarme (led0), led_battito (led1),
- * pulsante_conferma (sw0). Il BME280 (bus i2c0, indirizzo 0x76) lo comanda il tuo
- * driver bme280_corso, senza nodo nel devicetree.
+ * Hardware (app.overlay): alias led_allarme (LED rosso, PD14), led_battito (LED verde,
+ * PD12), pulsante_conferma (pulsante blu, PA0), watchdog0 (IWDG). Il sensore ADT7420
+ * (nodo "sensore") arriva da comune/: la temperatura si cambia dalla console con
+ * "sim temp <centesimi>" (es. sim temp 3500).
  *
  * Il comportamento richiesto e i formati di uscita (controllati dalle verifiche in
  * modulo8/verifiche/) sono descritti nei file dei passi.

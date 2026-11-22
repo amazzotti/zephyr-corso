@@ -1,9 +1,13 @@
 /*
- * Overlay dell'applicazione: viene AGGIUNTO al devicetree della scheda nrf52840dk.
+ * Overlay dell'applicazione: viene AGGIUNTO al devicetree della scheda stm32f4_disco.
  * Zephyr usa automaticamente il file "app.overlay" nella cartella dell'applicazione.
  *
+ * Etichette dei LED nel devicetree della scheda (le trovi in build/zephyr/zephyr.dts):
+ *   green_led_4 (PD12, alias led0)   orange_led_3 (PD13, alias led1)
+ *   red_led_5   (PD14, alias led2)   blue_led_6   (PD15, alias led3)
+ *
  * TODO (passo 1): dentro il nodo radice "/" aggiungi
- *   - un nodo "aliases" con l'alias  allarme = &led2;
+ *   - un nodo "aliases" con l'alias  allarme = &red_led_5;
  *   - un nodo "zephyr,user" con le proprieta'
  *         soglia = <30>;
  *         nome-nodo = "nodo-01";

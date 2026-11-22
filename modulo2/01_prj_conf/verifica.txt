@@ -2,5 +2,5 @@
 attendi: ^Banner: no$
 attendi: ^Tick al secondo: \d+$
 attendi: ^Stack di main: \d+ byte$
-attendi: ^Scheda: nrf52840dk
+attendi: ^Scheda: stm32f4_disco
 mai: Booting Zephyr OS

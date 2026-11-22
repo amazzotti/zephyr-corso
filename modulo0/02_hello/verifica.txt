@@ -1,4 +1,4 @@
 # Verifica dell'esercizio modulo0/02_hello
 attendi: Booting Zephyr OS
 attendi: ^Ciao, Zephyr!$
-attendi: ^Scheda: nrf52840dk
+attendi: ^Scheda: stm32f4_disco$

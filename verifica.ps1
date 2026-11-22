@@ -33,7 +33,7 @@ $ErrorActionPreference = 'Stop'
 
 $Ascii = [System.Text.Encoding]::ASCII
 $Ansi  = '\x1B\[[0-9;?]*[A-Za-z]'
-$Prompt = '\(nrf52840dk\)'
+$Prompt = '\(stm32f4\)'
 
 # --- stato della UART -------------------------------------------------------------------
 $script:Righe = New-Object System.Collections.Generic.List[string]
@@ -152,7 +152,7 @@ try {
 
     $resc = New-ScriptRenode $app 'verifica.resc' @(
         "emulation CreateServerSocketTerminal $PortaUart `"uartsock`" false",
-        'connector Connect sysbus.uart0 uartsock'
+        "connector Connect $script:UartConsole uartsock"
     )
 
     $renode = Get-Renode

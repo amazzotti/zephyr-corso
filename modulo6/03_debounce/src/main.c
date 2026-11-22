@@ -1,88 +1,82 @@
 /*
  * Esercizio 3 (Modulo 6) - Debounce
  *
- * Teoria: teoria/07_periferiche_driver.md, sezioni 5 e 11 (macro di Renode);
- *         teoria/06_tempo_lavoro_differito.md (k_timer, work queue).
+ * Teoria: teoria/07_periferiche_driver.md, sezione 5;
+ *         teoria/06_tempo_lavoro_differito.md (k_work_delayable).
  *
  * OBIETTIVO
- * Contare SOLO le pressioni vere di sw0, ignorando i rimbalzi meccanici: una pressione
- * con rimbalzi (pin che oscilla per qualche ms) deve contare 1. Tecnica: si campiona
- * ogni 10 ms e si accetta un nuovo stato solo quando e' rimasto UGUALE per 3 campioni
- * consecutivi (30 ms). E' il debounce "per campionamento", molto usato nei firmware.
- *
- * (Come nell'esercizio 2, il pulsante si campiona con un timer perche' in Renode gli
- * interrupt GPIO non scattano: vedi teoria, sezione 4.)
+ * Un pulsante meccanico "rimbalza": una pressione produce piu' fronti in pochi
+ * millisecondi, e con l'esercizio 2 verrebbe contata piu' volte. Qui ogni pressione
+ * deve contare UNA volta sola, con la tecnica classica: interrupt + lavoro ritardato.
+ * A ogni pressione valida il LED verde led0 cambia stato.
  *
  * PASSI
- * 1. Parti dall'esercizio 2 (pulsante, LED, k_timer ogni 10 ms).
- * 2. Costante e variabili static nella funzione del timer (o globali static):
- *        #define CAMPIONI_STABILI 3
- *        static int stabile = 0;      (ultimo stato ACCETTATO: 0 rilasciato, 1 premuto)
- *        static int candidato = 0;    (ultima lettura grezza)
- *        static int uguali = 0;       (quante letture consecutive uguali a candidato)
- * 3. Nella funzione del timer, a ogni campione:
- *      - int letto = gpio_pin_get_dt(&btn);
- *      - se letto == candidato: uguali++;  altrimenti: candidato = letto; uguali = 1;
- *      - se uguali >= CAMPIONI_STABILI e candidato != stabile:
- *            stabile = candidato;
- *            se stabile == 1 -> e' una PRESSIONE valida, se 0 -> un RILASCIO valido:
- *            segnalalo al thread (es. k_msgq_put di un int, o due semafori, o un
- *            k_work_submit). Ricorda: siamo in un interrupt, niente printk.
- * 4. Nel thread principale (o in una funzione della work queue): per ogni evento
- *      - pressione: incrementa il contatore, inverti led0, stampa "Pressioni valide: N";
- *      - rilascio: stampa "Rilasciato".
- * 5. Stampa "Pronto: premi sw0" dopo la configurazione, prima del ciclo.
- * 6. ESPERIMENTO in Renode (.\esegui.ps1): definisci nel monitor la macro "rimbalzo"
- *    della teoria (sezione 11) e lanciala con runMacro $rimbalzo, poi
- *        sysbus.gpio0.sw0 Release
- *    Quante pressioni conta questo programma? E quello dell'esercizio 2 con la stessa
- *    macro? Scrivi i risultati in fondo a questo commento. (I comandi della macro
- *    arrivano a distanza di pochissimo tempo virtuale: il campionamento a 10 ms spesso
- *    non li vede neppure. Prova anche a mettere CAMPIONI_STABILI a 1 e a ridurre il
- *    periodo del timer a 1 ms: cosa cambia?)
+ * 1. gpio_dt_spec di sw0 e led0, controlli e configurazione come nell'esercizio 2.
+ *    Interrupt su ENTRAMBI i fronti: gpio_pin_interrupt_configure_dt(&btn,
+ *    GPIO_INT_EDGE_BOTH). Ci servono anche i rilasci, per sapere quando il pulsante
+ *    torna libero.
+ * 2. Un lavoro ritardato (Modulo 5):
+ *        #define DEBOUNCE_MS 30
+ *        static void pulsante_stabile(struct k_work *w);
+ *        K_WORK_DELAYABLE_DEFINE(lavoro_debounce, pulsante_stabile);
+ * 3. La callback dell'interrupt fa UNA cosa sola: riprogramma il lavoro.
+ *        k_work_reschedule(&lavoro_debounce, K_MSEC(DEBOUNCE_MS));
+ *    Ogni nuovo fronte (rimbalzo) fa ripartire il conto alla rovescia da capo: il
+ *    lavoro scatta solo quando il pin e' rimasto fermo per DEBOUNCE_MS.
+ * 4. pulsante_stabile() gira nella work queue di sistema (un thread: qui si puo' fare
+ *    tutto). Legge il pin con gpio_pin_get_dt e lo confronta con l'ultimo stato
+ *    STABILE (variabile static, parte da 0):
+ *      - se e' uguale: era solo un rimbalzo, non fare nulla;
+ *      - se e' passato a 1: pressione valida -> contatore++, gpio_pin_toggle_dt(&led),
+ *        printk("Pressioni valide: %d\n", contatore);
+ *      - se e' passato a 0: printk("Rilasciato\n").
+ *    Poi aggiorna lo stato stabile.
+ * 5. In main() registra la callback (come nell'esercizio 2), stampa "Pronto: premi sw0"
+ *    e termina (return 0): il lavoro lo fanno interrupt e work queue.
+ * 6. Prova in Renode a simulare un rimbalzo. Il trucco: fermare il tempo virtuale,
+ *    dare piu' comandi e ripartire, cosi' tutti i fronti arrivano "nello stesso istante":
+ *        pause
+ *        sysbus.gpioPortA.sw0 Press
+ *        sysbus.gpioPortA.sw0 Release
+ *        sysbus.gpioPortA.sw0 Press
+ *        start
+ *    Deve comparire UNA sola "Pressioni valide". (Oppure usa la macro "rimbalzo" della
+ *    teoria, sezione 11.)
  *
- * OUTPUT ATTESO (due pressioni pulite, oppure due pressioni con rimbalzi)
+ * OUTPUT ATTESO
  *     Pronto: premi sw0
- *     Pressioni valide: 1
+ *     Pressioni valide: 1        (anche con i rimbalzi; LED acceso)
  *     Rilasciato
- *     Pressioni valide: 2
+ *     Pressioni valide: 2        (LED spento)
  *     Rilasciato
  *
  * CONCETTI NUOVI
- * - Rimbalzo dei contatti: per qualche ms dopo la pressione il pin oscilla 0/1/0/1.
- *   Chi conta ogni cambiamento conta troppo.
- * - Debounce per campionamento: uno stato e' "vero" solo se resta stabile per N
- *   campioni. Ritardo introdotto: N x periodo (qui 30 ms), impercettibile per una persona.
- * - Macchina a stati con memoria (variabili static): stabile / candidato / contatore.
- * - Alternativa con interrupt (scheda vera): interrupt su entrambi i fronti +
- *   k_work_reschedule di un k_work_delayable di 30 ms (teoria, sezione 5).
+ * - Rimbalzo dei contatti e debounce.
+ * - k_work_reschedule: se il lavoro e' gia' in attesa, il ritardo riparte da zero.
+ *   (k_work_schedule invece non lo sposterebbe: provalo nel bonus.)
+ * - Divisione del lavoro: interrupt = "e' successo qualcosa" (in microsecondi);
+ *   work queue = "decido cosa e' successo davvero" (in un thread).
  *
  * COME VERIFICARE DA SOLO
  *     .\verifica.ps1 modulo6\03_debounce
- * La verifica fa due pressioni pulite (in Renode la durata dei rimbalzi in tempo
- * virtuale non si controlla con precisione: i rimbalzi li provi a mano, passo 6).
+ * La verifica simula pressioni con rimbalzi e controlla che ognuna conti una volta.
  *
  * ERRORI TIPICI
- * - Azzerare "uguali" a 0 invece che a 1 quando cambia il candidato: serve un campione
- *   in piu' del previsto.
- * - Segnalare l'evento a ogni campione stabile invece che solo quando cambia "stabile":
- *   una pressione lunga genera centinaia di eventi.
- * - Contare anche il rilascio come pressione (manca il controllo stabile == 1).
- * - CAMPIONI_STABILI troppo grande (es. 50 = 500 ms): due pressioni rapide vere
- *   diventano una.
+ * - Contare nella callback: i rimbalzi contano tutti.
+ * - Usare k_work_schedule al posto di k_work_reschedule: con i rimbalzi il lavoro
+ *   scatta troppo presto, quando il pin non e' ancora stabile.
+ * - Confrontare con l'ultima lettura invece che con l'ultimo stato STABILE: un rimbalzo
+ *   1-0-1 sembrerebbe una nuova pressione.
+ * - DEBOUNCE_MS troppo grande (es. 500): il pulsante sembra "lento" e le pressioni
+ *   rapide si perdono.
  *
  * BONUS (facoltativo)
- * - Riconosci la pressione LUNGA: se lo stato stabile resta 1 per piu' di 1 s stampa
- *   "Pressione lunga" (conta i campioni nella funzione del timer, oppure usa un
- *   k_work_delayable programmato alla pressione e cancellato al rilascio).
- * - Rendi il debounce una piccola "libreria" (debounce.c/.h) riusabile per piu' pulsanti,
- *   con una struct per pulsante (stabile, candidato, uguali): ti servira' nel Modulo 8.
- * - Variante "integratore": un contatore che sale (max 3) quando legge 1 e scende
- *   (min 0) quando legge 0; lo stato diventa 1 a 3 e 0 a 0. Confrontala con la tua.
- *
- * RISULTATI DELL'ESPERIMENTO (passo 6):
- *   esercizio 2 con la macro rimbalzo: ...
- *   esercizio 3 con la macro rimbalzo: ...
+ * - Sostituisci k_work_reschedule con k_work_schedule e ripeti la prova del rimbalzo.
+ * - Pressione lunga: se il pulsante resta premuto piu' di 1 secondo stampa
+ *   "Pressione lunga" (un secondo lavoro ritardato, cancellato al rilascio con
+ *   k_work_cancel_delayable).
+ * - Debounce senza interrupt, per campionamento: k_timer ogni 10 ms e stato accettato
+ *   solo dopo 3 letture uguali consecutive (teoria sezione 5). Confronta le due tecniche.
  *
  * Scrivi il tuo codice qui sotto.
  */
@@ -91,11 +85,13 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/sys/printk.h>
 
-/* TODO: gpio_dt_spec, stato del debounce, funzione del timer, coda/segnali (passi 1-3) */
+#define DEBOUNCE_MS 30
+
+/* TODO: gpio_dt_spec, lavoro ritardato, funzione del lavoro e callback (passi 1-4) */
 
 int main(void)
 {
-	/* TODO: configurazione di pulsante e LED, avvio del timer, ciclo (passi 1, 4, 5) */
+	/* TODO: configurazione e registrazione della callback (passi 1 e 5) */
 
 	return 0;
 }

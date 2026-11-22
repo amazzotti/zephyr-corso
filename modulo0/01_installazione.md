@@ -97,7 +97,7 @@ qui sotto.
 
 ## Passo 5 — Zephyr SDK (la toolchain)
 
-Installiamo solo la toolchain ARM, che è quella che serve per il nRF52840:
+Installiamo solo la toolchain ARM, che è quella che serve per lo STM32F407 (un Cortex-M4F):
 
 ```powershell
 $env:Path += ';C:\Program Files\7-Zip'     # l'installazione dell'SDK vuole 7z nel PATH
@@ -114,7 +114,7 @@ il PATH non comprende 7-Zip: aggiungilo come sopra e lancia
 
 ```powershell
 cd C:\zephyrproject
-python -m west build -b nrf52840dk/nrf52840 -d build-prova zephyr\samples\hello_world --no-sysbuild
+python -m west build -b stm32f4_disco -d build-prova zephyr\samples\hello_world --no-sysbuild
 ```
 
 Deve finire con una tabella `Memory region / Used Size / Region Size` e il file

@@ -1,20 +1,24 @@
-# Verifica del passo 4 (conferma dell'allarme con SW0)
+# Verifica del passo 4 (conferma dell'allarme con il pulsante blu, battito)
 # Uso: .\verifica.ps1 modulo8\progetto -File modulo8\verifiche\04_pulsante.txt
-# Il pulsante resta premuto finche' il firmware risponde: il debounce per
-# campionamento (50 ms) ha sempre il tempo di vedere la pressione.
-monitor: sysbus.twi0.bme280 Temperature 22
 attendi: NODO AVVIATO
+scrivi: sim temp 2200
+attendi: sim: temperatura 22\.00 C
 # Pressione senza allarme: non deve succedere nulla
-monitor: sysbus.gpio0.sw0 Press
+monitor: sysbus.gpioPortA.sw0 Press
 pausa: 500
-monitor: sysbus.gpio0.sw0 Release
+monitor: sysbus.gpioPortA.sw0 Release
 pausa: 200
-monitor: sysbus.twi0.bme280 Temperature 35
+scrivi: sim temp 3500
 attendi 30: ALLARME ATTIVO
-controlla: sysbus.gpio0.led0 State => True
-monitor: sysbus.gpio0.sw0 Press
+controlla: sysbus.gpioPortD.led2 State => True
+# Pressione con rimbalzi (tempo virtuale fermo): una sola conferma
+monitor: pause
+monitor: sysbus.gpioPortA.sw0 Press
+monitor: sysbus.gpioPortA.sw0 Release
+monitor: sysbus.gpioPortA.sw0 Press
+monitor: start
 attendi 5: ALLARME CONFERMATO
-monitor: sysbus.gpio0.sw0 Release
-controlla: sysbus.gpio0.led0 State => False
-monitor: sysbus.twi0.bme280 Temperature 20
+monitor: sysbus.gpioPortA.sw0 Release
+controlla: sysbus.gpioPortD.led2 State => False
+scrivi: sim temp 2000
 attendi 30: ALLARME RIENTRATO

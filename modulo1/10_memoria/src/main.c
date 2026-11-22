@@ -6,14 +6,14 @@
  * OBIETTIVO
  * Scoprire DOVE finiscono in memoria funzioni, costanti, variabili globali, static e
  * locali: in flash o in RAM, e in quale sezione (.text, .rodata, .data, .bss, stack).
- * Su un microcontrollore con 256 KB di RAM e' una domanda che ti farai sempre.
+ * Su un microcontrollore con 128 KB di RAM e' una domanda che ti farai sempre.
  *
  * PASSI
  * 1. Le variabili da studiare sono gia' dichiarate qui sotto (globali) e in main
  *    (statica_locale e locale). Non cambiarle.
  * 2. Scrivi  const char *zona(uint32_t indirizzo)  che restituisce:
- *        "FLASH" se indirizzo < 0x00100000
- *        "RAM"   se 0x20000000 <= indirizzo < 0x20040000
+ *        "FLASH" se 0x08000000 <= indirizzo < 0x08100000
+ *        "RAM"   se 0x20000000 <= indirizzo < 0x20020000
  *        "?"     altrimenti
  * 3. Scrivi  void mostra(const char *nome, const void *p)  che stampa una riga con
  *    questo formato ESATTO:
@@ -41,9 +41,9 @@
  *    Risposte:
  *
  * OUTPUT ATTESO (gli indirizzi esatti dipendono dalla compilazione; conta la zona)
- *     main           0x000..... FLASH
- *     stringa        0x000..... FLASH
- *     costante       0x000..... FLASH
+ *     main           0x080..... FLASH
+ *     stringa        0x080..... FLASH
+ *     costante       0x080..... FLASH
  *     globale_init   0x2000.... RAM
  *     globale_zero   0x2000.... RAM
  *     statica_init   0x2000.... RAM
@@ -53,7 +53,8 @@
  * (tra indirizzo e zona c'e' un solo spazio; i puntini indicano cifre qualsiasi)
  *
  * CONCETTI NUOVI
- * - Mappa di memoria del chip: flash da 0x00000000, RAM da 0x20000000.
+ * - Mappa di memoria dello STM32F407: flash da 0x08000000 (1 MB), RAM da 0x20000000
+ *   (128 KB). Esiste anche una RAM "CCM" da 64 KB a 0x10000000, che Zephyr qui non usa.
  * - Sezioni: .text (codice), .rodata (costanti), .data (globali inizializzate),
  *   .bss (globali a zero), stack (locali).
  * - Il codice di avvio copia .data da flash a RAM e azzera .bss prima di main.
@@ -65,8 +66,10 @@
  *
  * ERRORI TIPICI
  * - Stampare un indirizzo con %d: i valori 0x2000.... diventano numeri enormi o negativi.
- * - Confrontare con <= 0x00100000 invece di <: l'indirizzo 0x00100000 e' gia' fuori dalla
- *   flash (1 MB = 0x100000 byte, da 0 a 0xFFFFF).
+ * - Confrontare con <= 0x08100000 invece di <: l'indirizzo 0x08100000 e' gia' fuori dalla
+ *   flash (1 MB = 0x100000 byte, da 0x08000000 a 0x080FFFFF).
+ * - Scrivere 0x8000000 (7 zeri) invece di 0x08000000: e' lo stesso numero, ma e' facile
+ *   contare male gli zeri. Scrivi sempre 8 cifre per gli indirizzi.
  * - Stupirsi che l'indirizzo di main sia DISPARI: sui Cortex-M il bit 0 di un indirizzo
  *   di funzione indica le istruzioni "Thumb". La funzione inizia all'indirizzo pari.
  *

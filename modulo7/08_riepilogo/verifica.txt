@@ -8,7 +8,7 @@ attendi: periodo: 200 ms, attivo: si
 scrivi: blink off
 attendi: lampeggio fermo
 pausa: 500
-controlla: sysbus.gpio0.led0 State => False
+controlla: sysbus.gpioPortD.led0 State => False
 scrivi: blink on
 attendi: lampeggio attivo
 scrivi: blink periodo 10

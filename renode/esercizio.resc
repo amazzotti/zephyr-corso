@@ -1,25 +1,19 @@
 :name: Esercizio del corso Zephyr
-:description: Crea la scheda nRF52840 DK simulata e carica il firmware dell'esercizio.
+:description: Crea la scheda STM32F4 Discovery simulata e carica il firmware dell'esercizio.
 
 # Variabili impostate da esegui.ps1 / verifica.ps1 prima di includere questo file:
 #   $bin   = firmware (build/zephyr/zephyr.elf)
-#   $repl  = descrizione della scheda (renode/nrf52840dk.repl)
+#   $repl  = descrizione della scheda (renode/stm32f4_disco.repl)
 
 using sysbus
-mach create "nrf52840dk"
+mach create "stm32f4"
 machine LoadPlatformDescription $repl
 
 # Mostra solo gli errori di Renode. Per vedere anche gli avvisi (per esempio accessi a
 # registri che il simulatore non modella) scrivi nel monitor:  logLevel 2   (o 0 per tutto)
 logLevel 3
 
-# Valori iniziali del sensore BME280 (il modello parte da 0). Si cambiano dal monitor con
-#   sysbus.twi0.bme280 Temperature 35.5     (gradi Celsius)
-#   sysbus.twi0.bme280 Humidity 60          (% di umidita' relativa)
-sysbus.twi0.bme280 Temperature 22.5
-sysbus.twi0.bme280 Humidity 45
-
-# "machine Reset" ricarica il firmware e riparte da capo.
+# "machine Reset" (e il reset del watchdog) ricarica il firmware e riparte da capo.
 macro reset
 """
     sysbus LoadELF $bin
